@@ -92,19 +92,19 @@ public class CustomBlockManager {
         registerBlock(new CustomBlockType(
                 "chiseled_deepslate",
                 Material.CHISELED_DEEPSLATE,
-                Component.text("Chiseled Deepslate")
+                Component.text("Reinforced Chiseled Deepslate")
                         .color(TextColor.color(0x434343))
                         .decoration(TextDecoration.ITALIC, false),
-                false
+                true
         ));
 
         registerBlock(new CustomBlockType(
                 "polished_deepslate",
                 Material.POLISHED_DEEPSLATE,
-                Component.text("Polished Deepslate")
+                Component.text("Reinforced Polished Deepslate")
                         .color(TextColor.color(0x505050))
                         .decoration(TextDecoration.ITALIC, false),
-                false
+                true
         ));
     }
 
