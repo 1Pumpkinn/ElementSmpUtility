@@ -1,0 +1,6 @@
+name: ElementSmpUtility
+version: '1.0-SNAPSHOT'
+main: hs.elementSmpUtility.ElementSmpUtility
+api-version: '1.21'
+load: STARTUP
+authors: [ ___Pumpkinn ]
