@@ -4,3 +4,15 @@ main: hs.elementSmpUtility.ElementSmpUtility
 api-version: '1.21'
 load: STARTUP
 authors: [ ___Pumpkinn ]
+
+commands:
+  customblock:
+    description: Manage custom blocks
+    usage: /customblock <give|list> [args]
+    aliases: [cb, cblock]
+    permission: elementsmp.customblock
+
+permissions:
+  elementsmp.customblock:
+    description: Allows use of custom block commands
+    default: op
