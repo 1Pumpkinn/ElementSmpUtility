@@ -47,21 +47,13 @@ public class TempleStructure {
     }
 
     private void buildEntranceStairs() {
+        // Removed entrance stairs - keeping ground level entrance
         int centerX = width / 2;
 
-        for (int step = 0; step < 5; step++) {
-            int z = step;
-            int y = 3 + step;
-            for (int x = centerX - 3; x <= centerX + 3; x++) {
-                if (z < depth) {
-                    blocks.add(new StructureBlock(x, y, z, "reinforced_deepslate_tiles", false));
-                }
-            }
-        }
-
+        // Just add decorative pillars at entrance
         for (int y = 3; y <= 10; y++) {
-            blocks.add(new StructureBlock(centerX - 4, y, 2, "chiseled_deepslate", false));
-            blocks.add(new StructureBlock(centerX + 4, y, 2, "chiseled_deepslate", false));
+            blocks.add(new StructureBlock(centerX - 4, y, 0, "chiseled_deepslate", false));
+            blocks.add(new StructureBlock(centerX + 4, y, 0, "chiseled_deepslate", false));
         }
     }
 
@@ -164,105 +156,69 @@ public class TempleStructure {
         int centerX = width / 2;
         int centerZ = depth / 2;
 
-        for (int x = centerX - 5; x <= centerX + 5; x++) {
-            for (int z = centerZ - 5; z <= centerZ + 5; z++) {
+        // Simple raised platform in center
+        for (int x = centerX - 3; x <= centerX + 3; x++) {
+            for (int z = centerZ - 3; z <= centerZ + 3; z++) {
                 blocks.add(new StructureBlock(x, 3, z, "polished_deepslate", false));
             }
         }
 
-        for (int y = 4; y <= 8; y++) {
-            int size = 9 - y;
-            for (int x = centerX - size; x <= centerX + size; x++) {
-                for (int z = centerZ - size; z <= centerZ + size; z++) {
-                    String blockType = (y == 8) ? "reinforced_deepslate_tiles" : "reinforced_deepslate_bricks";
-                    blocks.add(new StructureBlock(x, y, z, blockType, false));
-                }
+        // Central altar pedestal
+        for (int x = centerX - 1; x <= centerX + 1; x++) {
+            for (int z = centerZ - 1; z <= centerZ + 1; z++) {
+                blocks.add(new StructureBlock(x, 4, z, "reinforced_deepslate_bricks", false));
             }
         }
 
-        blocks.add(new StructureBlock(centerX, 9, centerZ, "reinforced_deepslate_altar", true));
-        blocks.add(new StructureBlock(centerX - 1, 9, centerZ, "reinforced_deepslate_altar", true));
-        blocks.add(new StructureBlock(centerX + 1, 9, centerZ, "reinforced_deepslate_altar", true));
-        blocks.add(new StructureBlock(centerX, 9, centerZ - 1, "reinforced_deepslate_altar", true));
-        blocks.add(new StructureBlock(centerX, 9, centerZ + 1, "reinforced_deepslate_altar", true));
-
-        int[][] circleOffsets = {
-                {-4, 0}, {4, 0}, {0, -4}, {0, 4},
-                {-3, -3}, {-3, 3}, {3, -3}, {3, 3}
-        };
-
-        for (int[] offset : circleOffsets) {
-            int x = centerX + offset[0];
-            int z = centerZ + offset[1];
-            blocks.add(new StructureBlock(x, 3, z, "chiseled_deepslate", false));
-            blocks.add(new StructureBlock(x, 4, z, "chiseled_deepslate", false));
-        }
-
-        buildSideChamber(centerX - 8, centerZ, 5);
-        buildSideChamber(centerX + 8, centerZ, 5);
+        // Main altar block
+        blocks.add(new StructureBlock(centerX, 5, centerZ, "reinforced_deepslate_altar", true));
     }
 
     private void buildSideChamber(int cx, int cz, int y) {
-        for (int x = cx - 2; x <= cx + 2; x++) {
-            for (int z = cz - 2; z <= cz + 2; z++) {
-                blocks.add(new StructureBlock(x, y, z, "polished_deepslate", false));
-
-                if (Math.abs(x - cx) == 1 && Math.abs(z - cz) == 1) {
-                    blocks.add(new StructureBlock(x, y + 1, z, "chiseled_deepslate", false));
-                }
-            }
-        }
+        // Removed - keeping interior open and clean
     }
 
     private void buildUpperGallery() {
-        int centerX = width / 2;
-        int centerZ = depth / 2;
-
-        for (int y = 13; y <= 15; y++) {
-            for (int x = 4; x < width - 4; x++) {
-                for (int z = 4; z < depth - 4; z++) {
-                    boolean isWalkway = (x == 4 || x == width - 5 || z == 4 || z == depth - 5);
-                    boolean isNearCenter = Math.abs(x - centerX) < 4 && Math.abs(z - centerZ) < 4;
-
-                    if (isWalkway && !isNearCenter) {
-                        blocks.add(new StructureBlock(x, y, z, "reinforced_deepslate_tiles", false));
-                    }
-                }
-            }
-
-            if (y == 13) {
-                for (int x = 4; x < width - 4; x++) {
-                    for (int z = 4; z < depth - 4; z++) {
-                        boolean isRailing = (x == 3 || x == width - 4 || z == 3 || z == depth - 4);
-                        if (isRailing && (x + z) % 2 == 0) {
-                            blocks.add(new StructureBlock(x, y + 1, z, "chiseled_deepslate", false));
-                        }
-                    }
-                }
-            }
-        }
+        // Removed - keeping single floor design for cleaner interior
     }
 
     private void buildTieredRoof() {
-        for (int tier = 0; tier < 4; tier++) {
-            int baseY = 16 + (tier * 2);
-            int inset = 3 + (tier * 2);
+        int centerX = width / 2;
+        int centerZ = depth / 2;
 
+        // Solid base ceiling at y=13
+        for (int x = 1; x < width - 1; x++) {
+            for (int z = 1; z < depth - 1; z++) {
+                blocks.add(new StructureBlock(x, 13, z, "reinforced_deepslate_tiles", false));
+            }
+        }
+
+        // Tiered pyramid roof - fully solid
+        for (int tier = 0; tier < 5; tier++) {
+            int baseY = 14 + tier;
+            int inset = 2 + (tier * 2);
+
+            // Fill entire tier solidly
             for (int x = inset; x < width - inset; x++) {
                 for (int z = inset; z < depth - inset; z++) {
-                    boolean isEdge = x == inset || x == width - inset - 1 ||
-                            z == inset || z == depth - inset - 1;
-
-                    if (isEdge) {
-                        String blockType = (tier % 2 == 0) ? "reinforced_deepslate_tiles" : "reinforced_deepslate_bricks";
-                        blocks.add(new StructureBlock(x, baseY, z, blockType, false));
-
-                        if ((x == inset || x == width - inset - 1) &&
-                                (z == inset || z == depth - inset - 1)) {
-                            blocks.add(new StructureBlock(x, baseY + 1, z, "chiseled_deepslate", false));
-                        }
-                    }
+                    String blockType = (tier % 2 == 0) ? "reinforced_deepslate_bricks" : "reinforced_deepslate_tiles";
+                    blocks.add(new StructureBlock(x, baseY, z, blockType, false));
                 }
+            }
+
+            // Decorative corners
+            if (tier < 4) {
+                blocks.add(new StructureBlock(inset, baseY, inset, "chiseled_deepslate", false));
+                blocks.add(new StructureBlock(width - inset - 1, baseY, inset, "chiseled_deepslate", false));
+                blocks.add(new StructureBlock(inset, baseY, depth - inset - 1, "chiseled_deepslate", false));
+                blocks.add(new StructureBlock(width - inset - 1, baseY, depth - inset - 1, "chiseled_deepslate", false));
+            }
+        }
+
+        // Top cap
+        for (int x = centerX - 3; x <= centerX + 3; x++) {
+            for (int z = centerZ - 3; z <= centerZ + 3; z++) {
+                blocks.add(new StructureBlock(x, 19, z, "reinforced_deepslate_bricks", false));
             }
         }
     }
@@ -271,26 +227,30 @@ public class TempleStructure {
         int centerX = width / 2;
         int centerZ = depth / 2;
 
+        // Solid spire base
         for (int x = centerX - 2; x <= centerX + 2; x++) {
             for (int z = centerZ - 2; z <= centerZ + 2; z++) {
-                blocks.add(new StructureBlock(x, 24, z, "reinforced_deepslate_bricks", false));
+                blocks.add(new StructureBlock(x, 20, z, "reinforced_deepslate_bricks", false));
+                blocks.add(new StructureBlock(x, 21, z, "reinforced_deepslate_bricks", false));
             }
         }
 
-        for (int y = 25; y <= 28; y++) {
-            int size = 29 - y;
+        // Tapering spire - solid layers
+        for (int y = 22; y <= 26; y++) {
+            int size = 27 - y;
             for (int x = centerX - size; x <= centerX + size; x++) {
                 for (int z = centerZ - size; z <= centerZ + size; z++) {
-                    if (x == centerX - size || x == centerX + size ||
-                            z == centerZ - size || z == centerZ + size ||
-                            (x == centerX && z == centerZ)) {
-                        blocks.add(new StructureBlock(x, y, z, "chiseled_deepslate", false));
-                    }
+                    blocks.add(new StructureBlock(x, y, z, "chiseled_deepslate", false));
                 }
             }
         }
 
-        blocks.add(new StructureBlock(centerX, 29, centerZ, "reinforced_deepslate_altar", true));
+        // Spire cap
+        blocks.add(new StructureBlock(centerX, 27, centerZ, "reinforced_deepslate_altar", true));
+        blocks.add(new StructureBlock(centerX - 1, 27, centerZ, "chiseled_deepslate", false));
+        blocks.add(new StructureBlock(centerX + 1, 27, centerZ, "chiseled_deepslate", false));
+        blocks.add(new StructureBlock(centerX, 27, centerZ - 1, "chiseled_deepslate", false));
+        blocks.add(new StructureBlock(centerX, 27, centerZ + 1, "chiseled_deepslate", false));
     }
 
     public List<StructureBlock> getBlocks() {
