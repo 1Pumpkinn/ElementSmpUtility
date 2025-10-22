@@ -12,7 +12,24 @@ commands:
     aliases: [cb, cblock]
     permission: elementsmp.customblock
 
+  temple:
+    description: Manage temple structures
+    usage: /temple <spawn|info> [args]
+    aliases: [t, templ]
+    permission: elementsmp.temple
+
 permissions:
   elementsmp.customblock:
     description: Allows use of custom block commands
     default: op
+
+  elementsmp.temple:
+    description: Allows spawning and managing temples
+    default: op
+
+  elementsmp.*:
+    description: Grants all ElementSMP permissions
+    default: op
+    children:
+      elementsmp.customblock: true
+      elementsmp.temple: true

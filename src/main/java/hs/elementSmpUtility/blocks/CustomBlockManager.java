@@ -33,7 +33,7 @@ public class CustomBlockManager {
      * Register default custom block types
      */
     private void registerDefaultBlocks() {
-        // Reinforced Deepslate Bricks
+        // Original reinforced blocks
         registerBlock(new CustomBlockType(
                 "reinforced_deepslate_bricks",
                 Material.DEEPSLATE_BRICKS,
@@ -43,7 +43,6 @@ public class CustomBlockManager {
                 true
         ));
 
-        // Reinforced Stone Bricks
         registerBlock(new CustomBlockType(
                 "reinforced_stone_bricks",
                 Material.STONE_BRICKS,
@@ -53,7 +52,6 @@ public class CustomBlockManager {
                 true
         ));
 
-        // Reinforced Obsidian
         registerBlock(new CustomBlockType(
                 "reinforced_obsidian",
                 Material.OBSIDIAN,
@@ -63,7 +61,6 @@ public class CustomBlockManager {
                 true
         ));
 
-        // Reinforced Prismarine
         registerBlock(new CustomBlockType(
                 "reinforced_prismarine",
                 Material.PRISMARINE_BRICKS,
@@ -71,6 +68,43 @@ public class CustomBlockManager {
                         .color(TextColor.color(0x63A295))
                         .decoration(TextDecoration.ITALIC, false),
                 true
+        ));
+
+        // New temple-specific blocks
+        registerBlock(new CustomBlockType(
+                "reinforced_deepslate_tiles",
+                Material.DEEPSLATE_TILES,
+                Component.text("Reinforced Deepslate Tiles")
+                        .color(TextColor.color(0x494949))
+                        .decoration(TextDecoration.ITALIC, false),
+                true
+        ));
+
+        registerBlock(new CustomBlockType(
+                "reinforced_deepslate_altar",
+                Material.CHISELED_DEEPSLATE,
+                Component.text("Reinforced Deepslate Altar")
+                        .color(TextColor.color(0x3A3A3A))
+                        .decoration(TextDecoration.ITALIC, false),
+                true
+        ));
+
+        registerBlock(new CustomBlockType(
+                "chiseled_deepslate",
+                Material.CHISELED_DEEPSLATE,
+                Component.text("Chiseled Deepslate")
+                        .color(TextColor.color(0x434343))
+                        .decoration(TextDecoration.ITALIC, false),
+                false
+        ));
+
+        registerBlock(new CustomBlockType(
+                "polished_deepslate",
+                Material.POLISHED_DEEPSLATE,
+                Component.text("Polished Deepslate")
+                        .color(TextColor.color(0x505050))
+                        .decoration(TextDecoration.ITALIC, false),
+                false
         ));
     }
 
