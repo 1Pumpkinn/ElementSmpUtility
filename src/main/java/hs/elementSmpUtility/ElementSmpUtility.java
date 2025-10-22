@@ -19,9 +19,9 @@ public final class ElementSmpUtility extends JavaPlugin {
         blockManager = new CustomBlockManager(this);
         storage = new BlockDataStorage(this, blockManager);
 
-        // Register listeners
+        // Register listeners (note: storage is now passed to BlockPlacementListener)
         getServer().getPluginManager().registerEvents(
-                new BlockPlacementListener(blockManager), this);
+                new BlockPlacementListener(blockManager, storage), this);
         getServer().getPluginManager().registerEvents(
                 new BlockBreakListener(blockManager, storage), this);
         getServer().getPluginManager().registerEvents(
