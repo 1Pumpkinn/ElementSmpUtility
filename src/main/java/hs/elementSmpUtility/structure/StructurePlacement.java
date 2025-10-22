@@ -7,9 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-/**
- * Handles placing structures in the world
- */
 public class StructurePlacement {
 
     private final CustomBlockManager blockManager;
@@ -20,26 +17,21 @@ public class StructurePlacement {
         this.storage = storage;
     }
 
-    /**
-     * Place a temple structure at the given location
-     */
     public boolean placeTemple(Location location) {
         if (location == null || location.getWorld() == null) {
             return false;
         }
 
-        hs.elementSmpUtility.structure.TempleStructure temple = new hs.elementSmpUtility.structure.TempleStructure();
+        TempleStructure temple = new TempleStructure();
         World world = location.getWorld();
 
         int baseX = location.getBlockX();
         int baseY = location.getBlockY();
         int baseZ = location.getBlockZ();
 
-        // Clear area first
         clearArea(world, baseX, baseY, baseZ, temple.getWidth(), temple.getHeight(), temple.getDepth());
 
-        // Place all blocks
-        for (hs.elementSmpUtility.structure.TempleStructure.StructureBlock structureBlock : temple.getBlocks()) {
+        for (TempleStructure.StructureBlock structureBlock : temple.getBlocks()) {
             int x = baseX + structureBlock.getX();
             int y = baseY + structureBlock.getY();
             int z = baseZ + structureBlock.getZ();
@@ -47,14 +39,11 @@ public class StructurePlacement {
             Block block = world.getBlockAt(x, y, z);
             String blockType = structureBlock.getBlockType();
 
-            // Get material from block type
             Material material = getMaterialFromBlockType(blockType);
             if (material != null) {
                 block.setType(material);
 
-                // Register as custom block if it's a reinforced type
-                if (blockType.startsWith("reinforced_") || blockType.startsWith("chiseled_")
-                        || blockType.startsWith("polished_")) {
+                if (blockType.startsWith("reinforced_") || blockType.startsWith("chiseled_") || blockType.startsWith("polished_")) {
                     storage.saveCustomBlock(block, blockType);
                 }
             }
@@ -63,9 +52,6 @@ public class StructurePlacement {
         return true;
     }
 
-    /**
-     * Clear area for structure placement
-     */
     private void clearArea(World world, int baseX, int baseY, int baseZ, int width, int height, int depth) {
         for (int x = baseX; x < baseX + width; x++) {
             for (int y = baseY; y < baseY + height; y++) {
@@ -79,9 +65,6 @@ public class StructurePlacement {
         }
     }
 
-    /**
-     * Map custom block type to Material
-     */
     private Material getMaterialFromBlockType(String blockType) {
         return switch (blockType) {
             case "reinforced_deepslate_bricks" -> Material.DEEPSLATE_BRICKS;
