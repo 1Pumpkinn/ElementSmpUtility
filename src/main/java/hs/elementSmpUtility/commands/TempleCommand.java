@@ -18,6 +18,7 @@ import java.util.List;
 
 /**
  * Command to spawn temple structures
+ * Allows unlimited temple spawning via command
  */
 public class TempleCommand implements CommandExecutor, TabCompleter {
 
@@ -70,36 +71,18 @@ public class TempleCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSpawn(Player player, String[] args) {
-        String worldName = player.getWorld().getName();
-
-        // Check world limit
-        if (!registry.canPlaceTemple(worldName)) {
-            player.sendMessage(Component.text("A temple already exists in this world!")
-                    .color(TextColor.color(0xFF5555)));
-            player.sendMessage(Component.text("Use /temple info to see temple locations")
-                    .color(TextColor.color(0xFFAA00)));
-            return;
-        }
-
-        boolean force = args.length > 1 && args[1].equalsIgnoreCase("force");
-
-        if (!force && registry.getTempleCount(worldName) > 0) {
-            player.sendMessage(Component.text("Warning: A temple may already exist!")
-                    .color(TextColor.color(0xFFAA00)));
-            player.sendMessage(Component.text("Use '/temple spawn force' to override")
-                    .color(TextColor.color(0xFFAA00)));
-            return;
-        }
-
         Location spawnLoc = player.getLocation();
         player.sendMessage(Component.text("Spawning temple...")
                 .color(TextColor.color(0x55FF55)));
 
-        // Spawn temple
+        // Spawn temple (no restrictions for command usage)
         if (placement.placeTemple(spawnLoc)) {
             registry.registerTemple(spawnLoc);
             player.sendMessage(Component.text("✔ Temple spawned successfully!")
                     .color(TextColor.color(0x55FF55)));
+            player.sendMessage(Component.text("Location: X:" + spawnLoc.getBlockX() +
+                            " Y:" + spawnLoc.getBlockY() + " Z:" + spawnLoc.getBlockZ())
+                    .color(TextColor.color(0xAAAAAA)));
         } else {
             player.sendMessage(Component.text("✘ Failed to spawn temple!")
                     .color(TextColor.color(0xFF5555)));
@@ -132,7 +115,7 @@ public class TempleCommand implements CommandExecutor, TabCompleter {
     private void sendUsage(Player player) {
         player.sendMessage(Component.text("=== Temple Commands ===")
                 .color(TextColor.color(0x55FFFF)));
-        player.sendMessage(Component.text("/temple spawn [force] - Spawn a temple at your location")
+        player.sendMessage(Component.text("/temple spawn - Spawn a temple at your location")
                 .color(TextColor.color(0xFFFFFF)));
         player.sendMessage(Component.text("/temple info - View temple information")
                 .color(TextColor.color(0xFFFFFF)));
@@ -146,8 +129,6 @@ public class TempleCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             completions.add("spawn");
             completions.add("info");
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("spawn")) {
-            completions.add("force");
         }
 
         return completions;
