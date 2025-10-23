@@ -12,9 +12,10 @@ import java.util.List;
 
 /**
  * Handles rotating items displayed on pedestals with performance optimizations
- * - Runs every 2 ticks instead of every tick (still smooth at 10 rotations/sec)
+ * - Runs every 2 ticks for smooth rotation (10 rotations/sec)
  * - Caches armor stands to avoid repeated metadata checks
  * - Only processes stands in loaded chunks
+ * - Auto-cleanup of invalid stands
  */
 public class PedestalRotationTask extends BukkitRunnable {
 
@@ -76,7 +77,7 @@ public class PedestalRotationTask extends BukkitRunnable {
         // Initial cache population
         updateCache();
 
-        // Run every 2 ticks (10 times per second) for smooth rotation with better performance
+        // Run every 2 ticks (10 times per second) for smooth rotation
         this.runTaskTimer(plugin, 0L, UPDATE_INTERVAL);
 
         plugin.getLogger().info("Pedestal rotation task started (2-tick interval, " +
@@ -88,5 +89,12 @@ public class PedestalRotationTask extends BukkitRunnable {
      */
     public void refreshCache() {
         updateCache();
+    }
+
+    /**
+     * Get count of currently tracked displays
+     */
+    public int getDisplayCount() {
+        return cachedStands.size();
     }
 }

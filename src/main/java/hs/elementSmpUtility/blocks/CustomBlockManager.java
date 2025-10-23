@@ -110,7 +110,7 @@ public class CustomBlockManager {
         // NEW: Custom model pedestal block
         registerBlock(new CustomModelBlock(
                 "pedestal",
-                Material.STONE, // Base material for the block
+                Material.LECTERN, // Base material for the block
                 Component.text("Ancient Pedestal")
                         .color(TextColor.color(0xD4AF37)) // Gold color
                         .decoration(TextDecoration.ITALIC, false)
