@@ -15,7 +15,8 @@ import org.bukkit.util.EulerAngle;
  */
 public class PedestalBlock {
 
-    private static final double HOVER_HEIGHT = 1.2;
+    // Adjusted for lectern height - lectern is 0.875 blocks tall
+    private static final double HOVER_HEIGHT = 0.95; // Just above the lectern top
     private static final String METADATA_KEY = "pedestal_display";
 
     /**
@@ -43,6 +44,7 @@ public class PedestalBlock {
      * Create a new display armor stand
      */
     private static ArmorStand createDisplay(Location pedestalLocation) {
+        // Spawn at exact center of block, adjusted height for lectern
         Location spawnLoc = pedestalLocation.clone().add(0.5, HOVER_HEIGHT, 0.5);
         Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
 
@@ -53,21 +55,21 @@ public class PedestalBlock {
         ArmorStand stand = (ArmorStand) pedestalLocation.getWorld()
                 .spawnEntity(spawnLoc, EntityType.ARMOR_STAND);
 
-        // Configure armor stand for optimal performance
+        // Configure armor stand for optimal performance and display
         stand.setVisible(false);
         stand.setGravity(false);
         stand.setInvulnerable(true);
         stand.setBasePlate(false);
         stand.setArms(false);
-        stand.setSmall(false);
+        stand.setSmall(true); // Use small armor stand for better item display
         stand.setMarker(true); // No hitbox, no collisions
         stand.setCustomNameVisible(false);
         stand.setPersistent(true);
         stand.setCanPickupItems(false);
         stand.setCollidable(false);
 
-        // Set head pose for proper display angle
-        stand.setHeadPose(new EulerAngle(0, 0, 0));
+        // Set head pose - slightly tilted forward for better visibility
+        stand.setHeadPose(new EulerAngle(Math.toRadians(0), 0, 0));
 
         // Add metadata to identify as pedestal display
         stand.setMetadata(METADATA_KEY, new FixedMetadataValue(plugin, true));
@@ -113,7 +115,6 @@ public class PedestalBlock {
 
     /**
      * Rotate the display armor stand smoothly
-     * Optimized to use teleport only, avoiding unnecessary location cloning
      */
     public static void rotateDisplay(ArmorStand stand, float rotationSpeed) {
         if (stand != null && stand.isValid()) {
