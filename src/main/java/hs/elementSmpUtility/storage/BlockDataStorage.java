@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages storage and retrieval of custom block data
+ * Manages storage and retrieval of custom block data with performance optimizations
  */
 public class BlockDataStorage {
 
@@ -52,7 +52,15 @@ public class BlockDataStorage {
     }
 
     /**
-     * Get custom block ID at a location
+     * Get custom block ID at a location (FAST - cache only, use for scanning)
+     */
+    public String getCustomBlockIdCached(Location location) {
+        String locationKey = getLocationKey(location);
+        return blockCache.get(locationKey);
+    }
+
+    /**
+     * Get custom block ID at a location (SLOW - loads from PDC if not cached)
      */
     public String getCustomBlockId(Block block) {
         String locationKey = getLocationKey(block.getLocation());
@@ -62,13 +70,21 @@ public class BlockDataStorage {
             return blockCache.get(locationKey);
         }
 
-        // Load from chunk persistent data
-        Chunk chunk = block.getChunk();
+        // Load from chunk persistent data only if not in cache
+        // This is expensive and should be avoided in loops
+        loadSingleBlock(block.getChunk(), locationKey);
+        return blockCache.get(locationKey);
+    }
+
+    /**
+     * Load a single block from chunk data (expensive operation)
+     */
+    private void loadSingleBlock(Chunk chunk, String locationKey) {
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
         String data = pdc.getOrDefault(storageKey, PersistentDataType.STRING, "");
 
         if (data.isEmpty()) {
-            return null;
+            return;
         }
 
         // Parse data to find block
@@ -78,11 +94,9 @@ public class BlockDataStorage {
             String[] parts = entry.split(":", 2);
             if (parts.length == 2 && parts[0].equals(locationKey)) {
                 blockCache.put(locationKey, parts[1]);
-                return parts[1];
+                return;
             }
         }
-
-        return null;
     }
 
     /**
