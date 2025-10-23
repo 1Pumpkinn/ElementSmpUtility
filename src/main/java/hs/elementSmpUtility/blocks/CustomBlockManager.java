@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages all custom unbreakable blocks
+ * Manages all custom unbreakable blocks including custom models
  */
 public class CustomBlockManager {
 
@@ -70,7 +70,7 @@ public class CustomBlockManager {
                 true
         ));
 
-        // New temple-specific blocks
+        // Temple-specific blocks
         registerBlock(new CustomBlockType(
                 "reinforced_deepslate_tiles",
                 Material.DEEPSLATE_TILES,
@@ -106,6 +106,18 @@ public class CustomBlockManager {
                         .decoration(TextDecoration.ITALIC, false),
                 true
         ));
+
+        // NEW: Custom model pedestal block
+        registerBlock(new CustomModelBlock(
+                "pedestal",
+                Material.STONE, // Base material for the block
+                Component.text("Ancient Pedestal")
+                        .color(TextColor.color(0xD4AF37)) // Gold color
+                        .decoration(TextDecoration.ITALIC, false)
+                        .decoration(TextDecoration.BOLD, true),
+                true, // Unbreakable
+                1 // Custom model data ID
+        ));
     }
 
     /**
@@ -133,11 +145,19 @@ public class CustomBlockManager {
                     blockType.getId()
             );
 
+            // Set custom model data if available
+            if (blockType instanceof CustomModelBlock modelBlock && modelBlock.hasCustomModel()) {
+                meta.setCustomModelData(modelBlock.getCustomModelData());
+            }
+
             if (blockType.isUnbreakable()) {
                 meta.lore(java.util.List.of(
                         Component.text("Unbreakable")
                                 .color(TextColor.color(0xFF5555))
-                                .decoration(TextDecoration.ITALIC, false)
+                                .decoration(TextDecoration.ITALIC, false),
+                        Component.text("Ancient relic of power")
+                                .color(TextColor.color(0x888888))
+                                .decoration(TextDecoration.ITALIC, true)
                 ));
             }
         });
