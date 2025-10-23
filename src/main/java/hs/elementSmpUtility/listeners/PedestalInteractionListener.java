@@ -15,7 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -52,9 +52,9 @@ public class PedestalInteractionListener implements Listener {
             return;
         }
 
-        // Check if it's a pedestal block
-        String blockId = blockStorage.getCustomBlockId(block);
-        if (blockId == null || !blockId.equals("pedestal")) {
+        // Check if it's a pedestal block (using cached check for performance)
+        String blockId = blockStorage.getCustomBlockIdCached(block.getLocation());
+        if (blockId == null || !"pedestal".equals(blockId)) {
             return;
         }
 
@@ -65,96 +65,83 @@ public class PedestalInteractionListener implements Listener {
         // Get current displayed item
         ItemStack currentItem = pedestalStorage.getPedestalItem(block.getLocation());
 
-        // Auto-restore display if it's missing but should exist
+        // Auto-restore display if missing (failsafe)
         if (currentItem != null) {
             ArmorStand existing = PedestalBlock.getExistingDisplay(block.getLocation());
             if (existing == null || !existing.isValid()) {
-                // Display is missing, restore it
                 PedestalBlock.createOrUpdateDisplay(block.getLocation(), currentItem);
             }
         }
 
         if (player.isSneaking()) {
-            // Sneaking = Remove item from pedestal
-            if (currentItem != null) {
-                // Give item back to player
-                player.getInventory().addItem(currentItem.clone());
-
-                // Remove from pedestal
-                pedestalStorage.savePedestalItem(block.getLocation(), null);
-                PedestalBlock.removeDisplay(block.getLocation());
-
-                player.playSound(block.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
-                player.sendActionBar(Component.text("Removed item from pedestal")
-                        .color(TextColor.color(0x55FF55)));
-            } else {
-                player.sendActionBar(Component.text("Pedestal is empty")
-                        .color(TextColor.color(0xFF5555)));
-            }
+            handleRemoveItem(player, block, currentItem);
         } else {
-            // Not sneaking = Place item on pedestal
-            if (heldItem.getType() == Material.AIR) {
-                if (currentItem != null) {
-                    player.sendActionBar(Component.text("Sneak + Right Click to remove item")
-                            .color(TextColor.color(0xFFAA00)));
-                } else {
-                    player.sendActionBar(Component.text("Hold an item to place it on the pedestal")
-                            .color(TextColor.color(0xFFAA00)));
-                }
-                return;
-            }
-
-            if (currentItem != null) {
-                player.sendActionBar(Component.text("Pedestal already has an item! Sneak to remove it first.")
-                        .color(TextColor.color(0xFF5555)));
-                return;
-            }
-
-            // Take one item from player's hand
-            ItemStack toPlace = heldItem.clone();
-            toPlace.setAmount(1);
-
-            heldItem.setAmount(heldItem.getAmount() - 1);
-
-            // Save to storage and create display
-            pedestalStorage.savePedestalItem(block.getLocation(), toPlace);
-            PedestalBlock.createOrUpdateDisplay(block.getLocation(), toPlace);
-
-            player.playSound(block.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.5f);
-            player.sendActionBar(Component.text("Placed item on pedestal")
-                    .color(TextColor.color(0x55FF55)));
+            handlePlaceItem(player, block, heldItem, currentItem);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onPedestalBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-        String blockId = blockStorage.getCustomBlockId(block);
+    /**
+     * Handle removing an item from the pedestal
+     */
+    private void handleRemoveItem(Player player, Block block, ItemStack currentItem) {
+        if (currentItem != null) {
+            // Give item back to player
+            player.getInventory().addItem(currentItem.clone());
 
-        if (blockId == null || !blockId.equals("pedestal")) {
+            // Remove from pedestal
+            pedestalStorage.savePedestalItem(block.getLocation(), null);
+            PedestalBlock.removeDisplay(block.getLocation());
+
+            player.playSound(block.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+            player.sendActionBar(Component.text("Removed item from pedestal")
+                    .color(TextColor.color(0x55FF55)));
+        } else {
+            player.sendActionBar(Component.text("Pedestal is empty")
+                    .color(TextColor.color(0xFF5555)));
+        }
+    }
+
+    /**
+     * Handle placing an item on the pedestal
+     */
+    private void handlePlaceItem(Player player, Block block, ItemStack heldItem, ItemStack currentItem) {
+        if (heldItem.getType() == Material.AIR) {
+            if (currentItem != null) {
+                player.sendActionBar(Component.text("Sneak + Right Click to remove item")
+                        .color(TextColor.color(0xFFAA00)));
+            } else {
+                player.sendActionBar(Component.text("Hold an item to place it on the pedestal")
+                        .color(TextColor.color(0xFFAA00)));
+            }
             return;
         }
 
-        // Get displayed item
-        ItemStack displayedItem = pedestalStorage.getPedestalItem(block.getLocation());
-
-        // Remove display armor stand
-        PedestalBlock.removeDisplay(block.getLocation());
-
-        // Drop displayed item
-        if (displayedItem != null) {
-            block.getWorld().dropItemNaturally(block.getLocation(), displayedItem);
+        if (currentItem != null) {
+            player.sendActionBar(Component.text("Pedestal already has an item! Sneak to remove it first.")
+                    .color(TextColor.color(0xFF5555)));
+            return;
         }
 
-        // Remove from storage
-        pedestalStorage.savePedestalItem(block.getLocation(), null);
+        // Take one item from player's hand
+        ItemStack toPlace = heldItem.clone();
+        toPlace.setAmount(1);
+
+        heldItem.setAmount(heldItem.getAmount() - 1);
+
+        // Save to storage and create display
+        pedestalStorage.savePedestalItem(block.getLocation(), toPlace);
+        PedestalBlock.createOrUpdateDisplay(block.getLocation(), toPlace);
+
+        player.playSound(block.getLocation(), Sound.BLOCK_STONE_PLACE, 1.0f, 1.5f);
+        player.sendActionBar(Component.text("Placed item on pedestal")
+                .color(TextColor.color(0x55FF55)));
     }
 
     /**
      * Prevent players from damaging pedestal armor stands
      */
-    @EventHandler
-    public void onArmorStandDamage(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onArmorStandDamage(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof ArmorStand stand)) {
             return;
         }

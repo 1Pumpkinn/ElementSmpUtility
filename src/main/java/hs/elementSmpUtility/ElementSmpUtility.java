@@ -36,7 +36,7 @@ public final class ElementSmpUtility extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new BlockPlacementListener(blockManager, storage), this);
         getServer().getPluginManager().registerEvents(
-                new BlockBreakListener(blockManager, storage), this);
+                new BlockBreakListener(blockManager, storage, pedestalStorage), this);
         getServer().getPluginManager().registerEvents(
                 new ChunkListener(storage, pedestalStorage), this);
         getServer().getPluginManager().registerEvents(
@@ -51,15 +51,14 @@ public final class ElementSmpUtility extends JavaPlugin {
         getCommand("temple").setExecutor(templeCommand);
         getCommand("temple").setTabCompleter(templeCommand);
 
-        // Start pedestal rotation task
+        // Start pedestal rotation task (optimized to run every 2 ticks)
         rotationTask = new PedestalRotationTask(this);
         rotationTask.start();
 
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
         getLogger().info("Temple system initialized");
-        getLogger().info("Pedestal rotation task started");
-        getLogger().info("NOTE: Pedestal displays restore on interaction (no automatic chunk scanning)");
+        getLogger().info("Pedestal rotation task started (optimized)");
     }
 
     @Override

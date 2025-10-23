@@ -1,6 +1,7 @@
 package hs.elementSmpUtility.listeners;
 
 import hs.elementSmpUtility.blocks.CustomBlockManager;
+import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import hs.elementSmpUtility.storage.BlockDataStorage;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -34,7 +35,12 @@ public class BlockPlacementListener implements Listener {
 
         Block block = event.getBlockPlaced();
 
-        // Store custom block data using the storage manager
+        // Store custom block data
         storage.saveCustomBlock(block, blockId);
+
+        // If it's a pedestal, create the display armor stand
+        if ("pedestal".equals(blockId)) {
+            PedestalBlock.createOrUpdateDisplay(block.getLocation(), null);
+        }
     }
 }

@@ -1,19 +1,22 @@
 package hs.elementSmpUtility.blocks.custom;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.EulerAngle;
 
 /**
- * Handles pedestal block functionality - displays items hovering above
+ * Handles pedestal block functionality - displays items hovering above with rotation
  */
 public class PedestalBlock {
 
     private static final double HOVER_HEIGHT = 1.2;
-    private static final double ROTATION_SPEED = 0.05; // Radians per tick
+    private static final String METADATA_KEY = "pedestal_display";
 
     /**
      * Create or update the display armor stand for a pedestal
@@ -28,8 +31,6 @@ public class PedestalBlock {
         if (stand != null) {
             if (displayItem != null && displayItem.getType() != Material.AIR) {
                 stand.getEquipment().setHelmet(displayItem);
-                stand.setCustomName(null);
-                stand.setCustomNameVisible(false);
             } else {
                 stand.getEquipment().setHelmet(null);
             }
@@ -43,29 +44,33 @@ public class PedestalBlock {
      */
     private static ArmorStand createDisplay(Location pedestalLocation) {
         Location spawnLoc = pedestalLocation.clone().add(0.5, HOVER_HEIGHT, 0.5);
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
+
+        if (plugin == null) {
+            return null;
+        }
 
         ArmorStand stand = (ArmorStand) pedestalLocation.getWorld()
                 .spawnEntity(spawnLoc, EntityType.ARMOR_STAND);
 
-        // Configure armor stand
+        // Configure armor stand for optimal performance
         stand.setVisible(false);
         stand.setGravity(false);
         stand.setInvulnerable(true);
         stand.setBasePlate(false);
         stand.setArms(false);
         stand.setSmall(false);
-        stand.setMarker(true); // Makes it not have a hitbox
+        stand.setMarker(true); // No hitbox, no collisions
         stand.setCustomNameVisible(false);
         stand.setPersistent(true);
+        stand.setCanPickupItems(false);
+        stand.setCollidable(false);
 
-        // Set head pose for better display
+        // Set head pose for proper display angle
         stand.setHeadPose(new EulerAngle(0, 0, 0));
 
-        // Add metadata to identify it as a pedestal display
-        stand.setMetadata("pedestal_display",
-                new org.bukkit.metadata.FixedMetadataValue(
-                        org.bukkit.Bukkit.getPluginManager().getPlugin("ElementSmpUtility"),
-                        true));
+        // Add metadata to identify as pedestal display
+        stand.setMetadata(METADATA_KEY, new FixedMetadataValue(plugin, true));
 
         return stand;
     }
@@ -79,7 +84,7 @@ public class PedestalBlock {
         return pedestalLocation.getWorld().getNearbyEntities(checkLoc, 0.5, 0.5, 0.5).stream()
                 .filter(entity -> entity instanceof ArmorStand)
                 .map(entity -> (ArmorStand) entity)
-                .filter(stand -> stand.hasMetadata("pedestal_display"))
+                .filter(stand -> stand.hasMetadata(METADATA_KEY))
                 .findFirst()
                 .orElse(null);
     }
@@ -107,22 +112,14 @@ public class PedestalBlock {
     }
 
     /**
-     * Rotate the display armor stand (call from a repeating task)
+     * Rotate the display armor stand smoothly
+     * Optimized to use teleport only, avoiding unnecessary location cloning
      */
-    public static void rotateDisplay(ArmorStand stand) {
+    public static void rotateDisplay(ArmorStand stand, float rotationSpeed) {
         if (stand != null && stand.isValid()) {
             Location loc = stand.getLocation();
-            float newYaw = loc.getYaw() + (float) Math.toDegrees(ROTATION_SPEED);
-            loc.setYaw(newYaw);
+            loc.setYaw(loc.getYaw() + rotationSpeed);
             stand.teleport(loc);
         }
-    }
-
-    /**
-     * Check if a location has a pedestal block
-     */
-    public static boolean isPedestalBlock(Location location) {
-        return location.getBlock().getType() == Material.STONE; // Pedestal base material
-        // TODO: Add custom block check through BlockDataStorage
     }
 }
