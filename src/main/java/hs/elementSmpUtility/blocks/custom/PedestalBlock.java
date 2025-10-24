@@ -46,12 +46,10 @@ public class PedestalBlock {
         if (stand != null) {
             if (displayItem != null && displayItem.getType() != Material.AIR) {
                 stand.getEquipment().setHelmet(displayItem);
-                stand.setGlowing(true);
-                // Add light source at pedestal
+                // Add light source above pedestal
                 addGlowEffect(pedestalLocation, true);
             } else {
                 stand.getEquipment().setHelmet(null);
-                stand.setGlowing(false);
                 // Remove light source
                 addGlowEffect(pedestalLocation, false);
             }
@@ -87,9 +85,6 @@ public class PedestalBlock {
         stand.setPersistent(true);
         stand.setCanPickupItems(false);
         stand.setCollidable(false);
-
-        // Make the armor stand glow
-        stand.setGlowing(true);
 
         // Center the head pose
         stand.setHeadPose(new EulerAngle(0, 0, 0));
@@ -157,7 +152,7 @@ public class PedestalBlock {
     }
 
     /**
-     * Adds or removes a light block beneath the pedestal for a glowing effect.
+     * Adds or removes a light block above the pedestal for a glowing effect.
      */
     private static void addGlowEffect(Location pedestalLocation, boolean add) {
         // Place light source one block ABOVE the pedestal
