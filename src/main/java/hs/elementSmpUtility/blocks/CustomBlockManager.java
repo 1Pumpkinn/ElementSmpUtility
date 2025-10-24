@@ -179,4 +179,8 @@ public class CustomBlockManager {
     public NamespacedKey getCustomBlockKey() {
         return customBlockKey;
     }
+
+    public JavaPlugin getPlugin() {
+        return plugin;
+    }
 }
