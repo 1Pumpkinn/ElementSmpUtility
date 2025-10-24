@@ -12,13 +12,18 @@ import org.bukkit.util.EulerAngle;
 
 public class PedestalBlock {
 
-    // Lower hover height - closer to pedestal
-    private static final double HOVER_HEIGHT = 0.4;
+    // Different hover heights for items vs blocks
+    private static final double ITEM_HOVER_HEIGHT = 0.4;
+    private static final double BLOCK_HOVER_HEIGHT = 0.6;
 
-    // Center the item properly on the pedestal
-    private static final double CENTER_OFFSET_X = 0.5;
-    private static final double CENTER_OFFSET_Y = -0.4; // Adjust vertical centering - moved back/down
-    private static final double CENTER_OFFSET_Z = 0.7;
+    // Different centering for items vs blocks
+    private static final double ITEM_CENTER_X = 0.5;
+    private static final double ITEM_CENTER_Y = -0.4;
+    private static final double ITEM_CENTER_Z = 0.7;
+
+    private static final double BLOCK_CENTER_X = 0.5;
+    private static final double BLOCK_CENTER_Y = -0.2;
+    private static final double BLOCK_CENTER_Z = 0.5;
 
     private static final String METADATA_KEY = "pedestal_display";
 
@@ -26,7 +31,12 @@ public class PedestalBlock {
         ArmorStand stand = getExistingDisplay(pedestalLocation);
 
         if (stand == null) {
-            stand = createDisplay(pedestalLocation);
+            stand = createDisplay(pedestalLocation, displayItem);
+        } else if (displayItem != null && displayItem.getType() != Material.AIR) {
+            // Update position if item type changed (block vs item)
+            boolean isBlock = displayItem.getType().isBlock();
+            Location newLoc = getCenteredLocation(pedestalLocation, isBlock);
+            stand.teleport(newLoc);
         }
 
         if (stand != null) {
@@ -40,9 +50,10 @@ public class PedestalBlock {
         return stand;
     }
 
-    private static ArmorStand createDisplay(Location pedestalLocation) {
-        // Center the armor stand on the block and set proper height
-        Location spawnLoc = getCenteredLocation(pedestalLocation);
+    private static ArmorStand createDisplay(Location pedestalLocation, ItemStack displayItem) {
+        // Determine if it's a block or item to use correct positioning
+        boolean isBlock = displayItem != null && displayItem.getType().isBlock();
+        Location spawnLoc = getCenteredLocation(pedestalLocation, isBlock);
         spawnLoc.setYaw(0);
         spawnLoc.setPitch(0);
 
@@ -60,7 +71,7 @@ public class PedestalBlock {
         stand.setInvulnerable(true);
         stand.setBasePlate(false);
         stand.setArms(false);
-        stand.setSmall(true); // Make it small for better centering
+        stand.setSmall(true);
         stand.setMarker(true);
         stand.setCustomNameVisible(false);
         stand.setPersistent(true);
@@ -76,14 +87,17 @@ public class PedestalBlock {
     }
 
     public static ArmorStand getExistingDisplay(Location pedestalLocation) {
-        Location checkLoc = getCenteredLocation(pedestalLocation);
+        // Check both possible positions (block and item)
+        Location checkLoc = getCenteredLocation(pedestalLocation, false);
 
-        return pedestalLocation.getWorld().getNearbyEntities(checkLoc, 0.5, 0.5, 0.5).stream()
+        ArmorStand stand = pedestalLocation.getWorld().getNearbyEntities(checkLoc, 0.8, 0.8, 0.8).stream()
                 .filter(entity -> entity instanceof ArmorStand)
                 .map(entity -> (ArmorStand) entity)
-                .filter(stand -> stand.hasMetadata(METADATA_KEY))
+                .filter(s -> s.hasMetadata(METADATA_KEY))
                 .findFirst()
                 .orElse(null);
+
+        return stand;
     }
 
     public static void removeDisplay(Location pedestalLocation) {
@@ -102,23 +116,23 @@ public class PedestalBlock {
         return null;
     }
 
-    public static void rotateDisplay(ArmorStand stand, float rotationSpeed) {
-        if (stand != null && stand.isValid()) {
-            EulerAngle currentPose = stand.getHeadPose();
-            double newYaw = currentPose.getY() + Math.toRadians(rotationSpeed);
-            stand.setHeadPose(new EulerAngle(currentPose.getX(), newYaw, currentPose.getZ()));
-        }
-    }
-
     /**
      * Get the centered location for the armor stand display
-     * This properly centers the item on the pedestal block
+     * Uses different positioning for blocks vs items
      */
-    private static Location getCenteredLocation(Location pedestalLocation) {
-        return pedestalLocation.clone().add(
-                CENTER_OFFSET_X,
-                HOVER_HEIGHT + CENTER_OFFSET_Y,
-                CENTER_OFFSET_Z
-        );
+    private static Location getCenteredLocation(Location pedestalLocation, boolean isBlock) {
+        if (isBlock) {
+            return pedestalLocation.clone().add(
+                    BLOCK_CENTER_X,
+                    BLOCK_HOVER_HEIGHT + BLOCK_CENTER_Y,
+                    BLOCK_CENTER_Z
+            );
+        } else {
+            return pedestalLocation.clone().add(
+                    ITEM_CENTER_X,
+                    ITEM_HOVER_HEIGHT + ITEM_CENTER_Y,
+                    ITEM_CENTER_Z
+            );
+        }
     }
 }

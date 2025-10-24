@@ -49,16 +49,14 @@ public final class ElementSmpUtility extends JavaPlugin {
         getCommand("temple").setExecutor(templeCommand);
         getCommand("temple").setTabCompleter(templeCommand);
 
-
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
         getLogger().info("Temple system initialized");
-        getLogger().info("Pedestal rotation task started (optimized)");
+        getLogger().info("Pedestal system initialized (static display)");
     }
 
     @Override
     public void onDisable() {
-
         getLogger().info("ElementSmpUtility has been disabled!");
     }
 
