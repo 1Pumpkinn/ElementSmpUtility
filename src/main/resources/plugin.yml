@@ -39,38 +39,3 @@ permissions:
     children:
       elementsmp.customblock: true
       elementsmp.temple: true
-
-  custommodels.*:
-    description: Grants all CustomModels permissions
-    default: op
-    children:
-      custommodels.use: true
-      custommodels.give: true
-      custommodels.list: true
-      custommodels.info: true
-      custommodels.reload: true
-      custommodels.generate: true
-
-    custommodels.use:
-      description: Allows basic usage of CustomModels commands
-      default: true
-
-    custommodels.give:
-      description: Allows giving custom model items
-      default: op
-
-    custommodels.list:
-      description: Allows listing all custom models
-      default: true
-
-    custommodels.info:
-      description: Allows viewing model information
-      default: true
-
-    custommodels.reload:
-      description: Allows reloading plugin configuration
-      default: op
-
-    custommodels.generate:
-      description: Allows generating resource packs
-      default: op
