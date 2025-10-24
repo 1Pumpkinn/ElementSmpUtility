@@ -107,10 +107,9 @@ public class CustomBlockManager {
                 true
         ));
 
-        // Pedestal block - now using LECTERN as base
         registerBlock(new CustomModelBlock(
                 "pedestal",
-                Material.LECTERN, // Changed from STONE to LECTERN
+                Material.STONE,
                 Component.text("Ancient Pedestal")
                         .color(TextColor.color(0xD4AF37)) // Gold color
                         .decoration(TextDecoration.ITALIC, false)

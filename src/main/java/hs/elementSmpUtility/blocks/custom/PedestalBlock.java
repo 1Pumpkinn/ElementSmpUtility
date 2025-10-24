@@ -15,8 +15,7 @@ import org.bukkit.util.EulerAngle;
  */
 public class PedestalBlock {
 
-    // Adjusted for lectern height - lectern is 0.875 blocks tall
-    private static final double HOVER_HEIGHT = 0.95; // Just above the lectern top
+    private static final double HOVER_HEIGHT = 0.6;
     private static final String METADATA_KEY = "pedestal_display";
 
     /**
@@ -44,8 +43,11 @@ public class PedestalBlock {
      * Create a new display armor stand
      */
     private static ArmorStand createDisplay(Location pedestalLocation) {
-        // Spawn at exact center of block, adjusted height for lectern
+        // Spawn at EXACT center of block (0.5, 0.5) with no yaw offset
         Location spawnLoc = pedestalLocation.clone().add(0.5, HOVER_HEIGHT, 0.5);
+        spawnLoc.setYaw(0); // Start at 0 degrees for consistent rotation
+        spawnLoc.setPitch(0);
+
         Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
 
         if (plugin == null) {
@@ -61,15 +63,15 @@ public class PedestalBlock {
         stand.setInvulnerable(true);
         stand.setBasePlate(false);
         stand.setArms(false);
-        stand.setSmall(true); // Use small armor stand for better item display
+        stand.setSmall(false); // Changed to normal size for larger item display
         stand.setMarker(true); // No hitbox, no collisions
         stand.setCustomNameVisible(false);
         stand.setPersistent(true);
         stand.setCanPickupItems(false);
         stand.setCollidable(false);
 
-        // Set head pose - slightly tilted forward for better visibility
-        stand.setHeadPose(new EulerAngle(Math.toRadians(0), 0, 0));
+        // Set head pose - perfectly upright for clean display
+        stand.setHeadPose(new EulerAngle(0, 0, 0));
 
         // Add metadata to identify as pedestal display
         stand.setMetadata(METADATA_KEY, new FixedMetadataValue(plugin, true));
@@ -114,12 +116,16 @@ public class PedestalBlock {
     }
 
     /**
-     * Rotate the display armor stand smoothly
+     * Rotate the display armor stand smoothly - rotation only around Y axis
      */
     public static void rotateDisplay(ArmorStand stand, float rotationSpeed) {
         if (stand != null && stand.isValid()) {
             Location loc = stand.getLocation();
+            // Only modify yaw to keep it spinning in place at exact center
             loc.setYaw(loc.getYaw() + rotationSpeed);
+            // Keep X and Z exactly at 0.5 to prevent drift
+            loc.setX(Math.floor(loc.getX()) + 0.5);
+            loc.setZ(Math.floor(loc.getZ()) + 0.5);
             stand.teleport(loc);
         }
     }
