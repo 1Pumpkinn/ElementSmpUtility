@@ -160,7 +160,8 @@ public class PedestalBlock {
      * Adds or removes a light block beneath the pedestal for a glowing effect.
      */
     private static void addGlowEffect(Location pedestalLocation, boolean add) {
-        Location lightLocation = pedestalLocation.clone().subtract(0, 1, 0);
+        // Place light source one block ABOVE the pedestal
+        Location lightLocation = pedestalLocation.clone().add(0, 1, 0);
         Block lightBlock = lightLocation.getBlock();
 
         if (add) {
