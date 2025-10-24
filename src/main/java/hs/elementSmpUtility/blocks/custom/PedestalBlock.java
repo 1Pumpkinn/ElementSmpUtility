@@ -3,6 +3,7 @@ package hs.elementSmpUtility.blocks.custom;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -13,7 +14,7 @@ import org.bukkit.util.EulerAngle;
 public class PedestalBlock {
 
     // Different hover heights for items vs blocks
-    private static final double ITEM_HOVER_HEIGHT = 0.4;
+    private static final double ITEM_HOVER_HEIGHT = 0.5;
     private static final double BLOCK_HOVER_HEIGHT = 0.6;
 
     // Different centering for items vs blocks
@@ -27,6 +28,9 @@ public class PedestalBlock {
 
     private static final String METADATA_KEY = "pedestal_display";
 
+    /**
+     * Creates or updates the ArmorStand display for the pedestal.
+     */
     public static ArmorStand createOrUpdateDisplay(Location pedestalLocation, ItemStack displayItem) {
         ArmorStand stand = getExistingDisplay(pedestalLocation);
 
@@ -42,29 +46,35 @@ public class PedestalBlock {
         if (stand != null) {
             if (displayItem != null && displayItem.getType() != Material.AIR) {
                 stand.getEquipment().setHelmet(displayItem);
+                stand.setGlowing(true);
+                // Add light source at pedestal
+                addGlowEffect(pedestalLocation, true);
             } else {
                 stand.getEquipment().setHelmet(null);
+                stand.setGlowing(false);
+                // Remove light source
+                addGlowEffect(pedestalLocation, false);
             }
         }
 
         return stand;
     }
 
+    /**
+     * Creates the armor stand used to display the item.
+     */
     private static ArmorStand createDisplay(Location pedestalLocation, ItemStack displayItem) {
-        // Determine if it's a block or item to use correct positioning
         boolean isBlock = displayItem != null && displayItem.getType().isBlock();
         Location spawnLoc = getCenteredLocation(pedestalLocation, isBlock);
         spawnLoc.setYaw(0);
         spawnLoc.setPitch(0);
 
         Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
-
         if (plugin == null) {
             return null;
         }
 
-        ArmorStand stand = (ArmorStand) pedestalLocation.getWorld()
-                .spawnEntity(spawnLoc, EntityType.ARMOR_STAND);
+        ArmorStand stand = (ArmorStand) pedestalLocation.getWorld().spawnEntity(spawnLoc, EntityType.ARMOR_STAND);
 
         stand.setVisible(false);
         stand.setGravity(false);
@@ -78,6 +88,9 @@ public class PedestalBlock {
         stand.setCanPickupItems(false);
         stand.setCollidable(false);
 
+        // Make the armor stand glow
+        stand.setGlowing(true);
+
         // Center the head pose
         stand.setHeadPose(new EulerAngle(0, 0, 0));
 
@@ -86,30 +99,37 @@ public class PedestalBlock {
         return stand;
     }
 
+    /**
+     * Returns an existing armor stand for the pedestal if one exists.
+     */
     public static ArmorStand getExistingDisplay(Location pedestalLocation) {
-        // Check both possible positions (block and item)
         Location checkLoc = getCenteredLocation(pedestalLocation, false);
 
-        ArmorStand stand = pedestalLocation.getWorld().getNearbyEntities(checkLoc, 0.8, 0.8, 0.8).stream()
+        return pedestalLocation.getWorld().getNearbyEntities(checkLoc, 0.8, 0.8, 0.8).stream()
                 .filter(entity -> entity instanceof ArmorStand)
                 .map(entity -> (ArmorStand) entity)
                 .filter(s -> s.hasMetadata(METADATA_KEY))
                 .findFirst()
                 .orElse(null);
-
-        return stand;
     }
 
+    /**
+     * Removes the armor stand display from the pedestal.
+     */
     public static void removeDisplay(Location pedestalLocation) {
         ArmorStand stand = getExistingDisplay(pedestalLocation);
         if (stand != null) {
             stand.remove();
         }
+        addGlowEffect(pedestalLocation, false);
     }
 
+    /**
+     * Gets the item currently displayed on the pedestal.
+     */
     public static ItemStack getDisplayedItem(Location pedestalLocation) {
         ArmorStand stand = getExistingDisplay(pedestalLocation);
-        if (stand != null) {
+        if (stand != null && stand.getEquipment() != null) {
             ItemStack helmet = stand.getEquipment().getHelmet();
             return (helmet != null && helmet.getType() != Material.AIR) ? helmet : null;
         }
@@ -117,8 +137,8 @@ public class PedestalBlock {
     }
 
     /**
-     * Get the centered location for the armor stand display
-     * Uses different positioning for blocks vs items
+     * Get the centered location for the armor stand display.
+     * Uses different positioning for blocks vs items.
      */
     private static Location getCenteredLocation(Location pedestalLocation, boolean isBlock) {
         if (isBlock) {
@@ -133,6 +153,29 @@ public class PedestalBlock {
                     ITEM_HOVER_HEIGHT + ITEM_CENTER_Y,
                     ITEM_CENTER_Z
             );
+        }
+    }
+
+    /**
+     * Adds or removes a light block beneath the pedestal for a glowing effect.
+     */
+    private static void addGlowEffect(Location pedestalLocation, boolean add) {
+        Location lightLocation = pedestalLocation.clone().subtract(0, 1, 0);
+        Block lightBlock = lightLocation.getBlock();
+
+        if (add) {
+            if (lightBlock.getType() != Material.LIGHT) {
+                lightBlock.setType(Material.LIGHT);
+
+                if (lightBlock.getBlockData() instanceof org.bukkit.block.data.type.Light light) {
+                    light.setLevel(15);
+                    lightBlock.setBlockData(light);
+                }
+            }
+        } else {
+            if (lightBlock.getType() == Material.LIGHT) {
+                lightBlock.setType(Material.AIR);
+            }
         }
     }
 }
