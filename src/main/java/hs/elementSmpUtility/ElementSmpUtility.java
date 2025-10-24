@@ -11,7 +11,6 @@ import hs.elementSmpUtility.storage.BlockDataStorage;
 import hs.elementSmpUtility.storage.PedestalDataStorage;
 import hs.elementSmpUtility.structure.StructurePlacement;
 import hs.elementSmpUtility.structure.TempleRegistry;
-import hs.elementSmpUtility.tasks.PedestalRotationTask;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ElementSmpUtility extends JavaPlugin {
@@ -21,7 +20,6 @@ public final class ElementSmpUtility extends JavaPlugin {
     private PedestalDataStorage pedestalStorage;
     private TempleRegistry templeRegistry;
     private StructurePlacement structurePlacement;
-    private PedestalRotationTask rotationTask;
 
     @Override
     public void onEnable() {
@@ -51,9 +49,6 @@ public final class ElementSmpUtility extends JavaPlugin {
         getCommand("temple").setExecutor(templeCommand);
         getCommand("temple").setTabCompleter(templeCommand);
 
-        // Start pedestal rotation task (optimized to run every 2 ticks)
-        rotationTask = new PedestalRotationTask(this);
-        rotationTask.start();
 
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
@@ -63,10 +58,6 @@ public final class ElementSmpUtility extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Cancel rotation task
-        if (rotationTask != null) {
-            rotationTask.cancel();
-        }
 
         getLogger().info("ElementSmpUtility has been disabled!");
     }
