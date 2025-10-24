@@ -12,7 +12,7 @@ import org.bukkit.util.EulerAngle;
 
 public class PedestalBlock {
 
-    private static final double HOVER_HEIGHT = 0.25;
+    private static final double HOVER_HEIGHT = 1.0;
     private static final String METADATA_KEY = "pedestal_display";
 
     public static ArmorStand createOrUpdateDisplay(Location pedestalLocation, ItemStack displayItem) {
@@ -52,7 +52,7 @@ public class PedestalBlock {
         stand.setInvulnerable(true);
         stand.setBasePlate(false);
         stand.setArms(false);
-        stand.setSmall(true);
+        stand.setSmall(false);
         stand.setMarker(true);
         stand.setCustomNameVisible(false);
         stand.setPersistent(true);
@@ -95,11 +95,9 @@ public class PedestalBlock {
 
     public static void rotateDisplay(ArmorStand stand, float rotationSpeed) {
         if (stand != null && stand.isValid()) {
-            Location loc = stand.getLocation();
-            loc.setYaw(loc.getYaw() + rotationSpeed);
-            loc.setX(Math.floor(loc.getX()) + 0.5);
-            loc.setZ(Math.floor(loc.getZ()) + 0.5);
-            stand.teleport(loc);
+            EulerAngle currentPose = stand.getHeadPose();
+            double newYaw = currentPose.getY() + Math.toRadians(rotationSpeed);
+            stand.setHeadPose(new EulerAngle(currentPose.getX(), newYaw, currentPose.getZ()));
         }
     }
 }
