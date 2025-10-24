@@ -102,12 +102,13 @@ public class CustomBlockManager {
         registerBlock(new CustomModelBlock(
                 "pedestal",
                 Material.LODESTONE,
-                Component.text("Ancient Pedestal")
+                Component.text("Pedestal")
                         .color(TextColor.color(0xD4AF37))
                         .decoration(TextDecoration.ITALIC, false)
                         .decoration(TextDecoration.BOLD, true),
-                true,
+                false,
                 1
+
         ));
     }
 
