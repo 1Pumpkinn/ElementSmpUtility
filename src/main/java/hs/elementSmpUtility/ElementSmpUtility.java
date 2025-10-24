@@ -2,7 +2,6 @@ package hs.elementSmpUtility;
 
 import hs.elementSmpUtility.blocks.CustomBlockManager;
 import hs.elementSmpUtility.commands.CustomBlockCommand;
-import hs.elementSmpUtility.commands.TempleCommand;
 import hs.elementSmpUtility.listeners.BlockBreakListener;
 import hs.elementSmpUtility.listeners.BlockPlacementListener;
 import hs.elementSmpUtility.listeners.ChunkListener;
