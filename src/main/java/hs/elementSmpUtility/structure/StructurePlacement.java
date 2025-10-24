@@ -37,7 +37,7 @@ public class StructurePlacement {
         int baseY = location.getBlockY();
         int baseZ = location.getBlockZ();
 
-        clearArea(world, baseX, baseY, baseZ, temple.getWidth(), temple.getHeight(), temple.getDepth());
+        clearArea(world, baseX, baseY, baseZ, temple.getWidth(), temple.getHeight() + 5, temple.getDepth());
 
         for (TempleStructure.StructureBlock structureBlock : temple.getBlocks()) {
             int x = baseX + structureBlock.getX();
@@ -55,7 +55,6 @@ public class StructurePlacement {
 
             if ("chest".equals(blockType)) {
                 block.setType(Material.CHEST);
-                // Delay chest population to ensure block state is ready
                 Location chestLoc = block.getLocation();
                 Bukkit.getScheduler().runTaskLater(
                         blockManager.getPlugin(),
@@ -67,6 +66,16 @@ public class StructurePlacement {
 
             if ("lantern".equals(blockType)) {
                 block.setType(Material.LANTERN);
+                continue;
+            }
+
+            if ("chain".equals(blockType)) {
+                block.setType(Material.CHAIN);
+                continue;
+            }
+
+            if ("chiseled_bookshelf".equals(blockType)) {
+                block.setType(Material.CHISELED_BOOKSHELF);
                 continue;
             }
 
