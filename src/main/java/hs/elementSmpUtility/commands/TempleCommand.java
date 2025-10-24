@@ -1,7 +1,5 @@
 package hs.elementSmpUtility.commands;
 
-import hs.elementSmpUtility.structure.StructurePlacement;
-import hs.elementSmpUtility.structure.TempleRegistry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;

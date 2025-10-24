@@ -9,8 +9,6 @@ import hs.elementSmpUtility.listeners.ChunkListener;
 import hs.elementSmpUtility.listeners.PedestalInteractionListener;
 import hs.elementSmpUtility.storage.BlockDataStorage;
 import hs.elementSmpUtility.storage.PedestalDataStorage;
-import hs.elementSmpUtility.structure.StructurePlacement;
-import hs.elementSmpUtility.structure.TempleRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ElementSmpUtility extends JavaPlugin {
@@ -18,8 +16,6 @@ public final class ElementSmpUtility extends JavaPlugin {
     private CustomBlockManager blockManager;
     private BlockDataStorage storage;
     private PedestalDataStorage pedestalStorage;
-    private TempleRegistry templeRegistry;
-    private StructurePlacement structurePlacement;
 
     @Override
     public void onEnable() {
@@ -27,8 +23,6 @@ public final class ElementSmpUtility extends JavaPlugin {
         blockManager = new CustomBlockManager(this);
         storage = new BlockDataStorage(this, blockManager);
         pedestalStorage = new PedestalDataStorage(this);
-        templeRegistry = new TempleRegistry(this);
-        structurePlacement = new StructurePlacement(blockManager, storage);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(
@@ -44,10 +38,6 @@ public final class ElementSmpUtility extends JavaPlugin {
         CustomBlockCommand blockCommand = new CustomBlockCommand(blockManager);
         getCommand("customblock").setExecutor(blockCommand);
         getCommand("customblock").setTabCompleter(blockCommand);
-
-        TempleCommand templeCommand = new TempleCommand(structurePlacement, templeRegistry);
-        getCommand("temple").setExecutor(templeCommand);
-        getCommand("temple").setTabCompleter(templeCommand);
 
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
@@ -70,13 +60,5 @@ public final class ElementSmpUtility extends JavaPlugin {
 
     public PedestalDataStorage getPedestalStorage() {
         return pedestalStorage;
-    }
-
-    public TempleRegistry getTempleRegistry() {
-        return templeRegistry;
-    }
-
-    public StructurePlacement getStructurePlacement() {
-        return structurePlacement;
     }
 }
