@@ -12,9 +12,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Manages all custom unbreakable blocks including custom models
- */
 public class CustomBlockManager {
 
     private final JavaPlugin plugin;
@@ -29,11 +26,7 @@ public class CustomBlockManager {
         registerDefaultBlocks();
     }
 
-    /**
-     * Register default custom block types
-     */
     private void registerDefaultBlocks() {
-        // Original reinforced blocks
         registerBlock(new CustomBlockType(
                 "reinforced_deepslate_bricks",
                 Material.DEEPSLATE_BRICKS,
@@ -70,7 +63,6 @@ public class CustomBlockManager {
                 true
         ));
 
-        // Temple-specific blocks
         registerBlock(new CustomBlockType(
                 "reinforced_deepslate_tiles",
                 Material.DEEPSLATE_TILES,
@@ -109,26 +101,20 @@ public class CustomBlockManager {
 
         registerBlock(new CustomModelBlock(
                 "pedestal",
-                Material.STONE,
+                Material.LODESTONE,
                 Component.text("Ancient Pedestal")
-                        .color(TextColor.color(0xD4AF37)) // Gold color
+                        .color(TextColor.color(0xD4AF37))
                         .decoration(TextDecoration.ITALIC, false)
                         .decoration(TextDecoration.BOLD, true),
-                true, // Unbreakable
-                1 // Custom model data ID
+                true,
+                1
         ));
     }
 
-    /**
-     * Register a custom block type
-     */
     public void registerBlock(CustomBlockType blockType) {
         blockTypes.put(blockType.getId(), blockType);
     }
 
-    /**
-     * Create a custom block item
-     */
     public ItemStack createCustomBlock(String blockId, int amount) {
         CustomBlockType blockType = blockTypes.get(blockId);
         if (blockType == null) {
@@ -144,7 +130,6 @@ public class CustomBlockManager {
                     blockType.getId()
             );
 
-            // Set custom model data if available
             if (blockType instanceof CustomModelBlock modelBlock && modelBlock.hasCustomModel()) {
                 meta.setCustomModelData(modelBlock.getCustomModelData());
             }
@@ -164,9 +149,6 @@ public class CustomBlockManager {
         return item;
     }
 
-    /**
-     * Check if an ItemStack is a custom block
-     */
     public boolean isCustomBlock(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return false;
@@ -176,9 +158,6 @@ public class CustomBlockManager {
                 .has(customBlockKey, PersistentDataType.STRING);
     }
 
-    /**
-     * Get the custom block ID from an ItemStack
-     */
     public String getCustomBlockId(ItemStack item) {
         if (!isCustomBlock(item)) {
             return null;
@@ -188,16 +167,10 @@ public class CustomBlockManager {
                 .get(customBlockKey, PersistentDataType.STRING);
     }
 
-    /**
-     * Get a custom block type by ID
-     */
     public CustomBlockType getBlockType(String blockId) {
         return blockTypes.get(blockId);
     }
 
-    /**
-     * Get all registered block types
-     */
     public Map<String, CustomBlockType> getAllBlockTypes() {
         return new HashMap<>(blockTypes);
     }
