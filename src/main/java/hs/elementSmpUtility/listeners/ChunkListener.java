@@ -2,7 +2,8 @@ package hs.elementSmpUtility.listeners;
 
 import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import hs.elementSmpUtility.storage.BlockDataStorage;
-import hs.elementSmpUtility.storage.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalOwnerStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -23,10 +24,13 @@ public class ChunkListener implements Listener {
 
     private final BlockDataStorage storage;
     private final PedestalDataStorage pedestalStorage;
+    private final PedestalOwnerStorage ownerStorage;
 
-    public ChunkListener(BlockDataStorage storage, PedestalDataStorage pedestalStorage) {
+    public ChunkListener(BlockDataStorage storage, PedestalDataStorage pedestalStorage,
+                         PedestalOwnerStorage ownerStorage) {
         this.storage = storage;
         this.pedestalStorage = pedestalStorage;
+        this.ownerStorage = ownerStorage;
     }
 
     @EventHandler
@@ -36,6 +40,7 @@ public class ChunkListener implements Listener {
         // Load data into cache (instant, no lag)
         storage.loadChunk(chunk);
         pedestalStorage.loadChunk(chunk);
+        ownerStorage.loadChunk(chunk);
 
         // Restore pedestal displays asynchronously to avoid lag
         Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
@@ -53,6 +58,7 @@ public class ChunkListener implements Listener {
         // Unload data from cache to free memory
         storage.unloadChunk(chunk);
         pedestalStorage.unloadChunk(chunk);
+        ownerStorage.unloadChunk(chunk);
     }
 
     /**
@@ -92,7 +98,8 @@ public class ChunkListener implements Listener {
                                     plugin.getLogger().info(
                                             "Restored pedestal display at " +
                                                     loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() +
-                                                    " with " + storedItem.getType()
+                                                    " with " + storedItem.getType() +
+                                                    " (Owner: " + ownerStorage.getOwnerName(loc) + ")"
                                     );
                                 }
                             } else {

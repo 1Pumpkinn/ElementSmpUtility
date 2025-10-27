@@ -3,7 +3,8 @@ package hs.elementSmpUtility.listeners;
 import hs.elementSmpUtility.blocks.CustomBlockManager;
 import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import hs.elementSmpUtility.storage.BlockDataStorage;
-import hs.elementSmpUtility.storage.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalOwnerStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
@@ -28,13 +29,16 @@ public class PedestalInteractionListener implements Listener {
     private final CustomBlockManager blockManager;
     private final BlockDataStorage blockStorage;
     private final PedestalDataStorage pedestalStorage;
+    private final PedestalOwnerStorage ownerStorage;
 
     public PedestalInteractionListener(CustomBlockManager blockManager,
                                        BlockDataStorage blockStorage,
-                                       PedestalDataStorage pedestalStorage) {
+                                       PedestalDataStorage pedestalStorage,
+                                       PedestalOwnerStorage ownerStorage) {
         this.blockManager = blockManager;
         this.blockStorage = blockStorage;
         this.pedestalStorage = pedestalStorage;
+        this.ownerStorage = ownerStorage;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -60,6 +64,19 @@ public class PedestalInteractionListener implements Listener {
 
         event.setCancelled(true);
         Player player = event.getPlayer();
+
+        // Check ownership - only owner can interact (unless they have bypass permission)
+        if (!ownerStorage.isOwner(block.getLocation(), player.getUniqueId())) {
+            if (!player.hasPermission("elementsmp.pedestal.bypass")) {
+                String ownerName = ownerStorage.getOwnerName(block.getLocation());
+                player.sendActionBar(
+                        Component.text("This pedestal belongs to " + ownerName + "!")
+                                .color(TextColor.color(0xFF5555))
+                );
+                return;
+            }
+        }
+
         ItemStack heldItem = player.getInventory().getItemInMainHand();
 
         // Get current displayed item

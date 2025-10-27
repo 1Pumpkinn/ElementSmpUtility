@@ -14,7 +14,7 @@ commands:
 
   pedestal:
     description: Manage pedestal storage
-    usage: /pedestal <info|reload>
+    usage: /pedestal <info|reload|check|transfer>
     permission: elementsmp.pedestal.admin
 
 permissions:
@@ -24,4 +24,8 @@ permissions:
 
   elementsmp.pedestal.admin:
     description: Allows use of pedestal admin commands
+    default: op
+
+  elementsmp.pedestal.bypass:
+    description: Allows bypassing pedestal ownership restrictions
     default: op

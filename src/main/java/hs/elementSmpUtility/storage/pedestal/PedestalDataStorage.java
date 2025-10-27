@@ -1,4 +1,4 @@
-package hs.elementSmpUtility.storage;
+package hs.elementSmpUtility.storage.pedestal;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;

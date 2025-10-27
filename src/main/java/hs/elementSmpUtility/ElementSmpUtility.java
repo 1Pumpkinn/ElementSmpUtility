@@ -1,15 +1,16 @@
 package hs.elementSmpUtility;
 
 import hs.elementSmpUtility.blocks.CustomBlockManager;
-import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import hs.elementSmpUtility.commands.CustomBlockCommand;
-import hs.elementSmpUtility.listeners.BlockBreakListener;
-import hs.elementSmpUtility.listeners.BlockPlacementListener;
+import hs.elementSmpUtility.commands.PedestalCommand;
+import hs.elementSmpUtility.listeners.block.BlockBreakListener;
+import hs.elementSmpUtility.listeners.block.BlockPlacementListener;
 import hs.elementSmpUtility.listeners.ChunkListener;
 import hs.elementSmpUtility.listeners.PedestalInteractionListener;
 import hs.elementSmpUtility.recipes.PedestalRecipe;
 import hs.elementSmpUtility.storage.BlockDataStorage;
-import hs.elementSmpUtility.storage.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalOwnerStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -25,6 +26,7 @@ public final class ElementSmpUtility extends JavaPlugin {
     private CustomBlockManager blockManager;
     private BlockDataStorage storage;
     private PedestalDataStorage pedestalStorage;
+    private PedestalOwnerStorage ownerStorage;
 
     @Override
     public void onEnable() {
@@ -32,6 +34,7 @@ public final class ElementSmpUtility extends JavaPlugin {
         blockManager = new CustomBlockManager(this);
         storage = new BlockDataStorage(this, blockManager);
         pedestalStorage = new PedestalDataStorage(this);
+        ownerStorage = new PedestalOwnerStorage(this);
 
         // Register recipes
         PedestalRecipe pedestalRecipe = new PedestalRecipe(this, blockManager);
@@ -39,18 +42,22 @@ public final class ElementSmpUtility extends JavaPlugin {
 
         // Register listeners
         getServer().getPluginManager().registerEvents(
-                new BlockPlacementListener(blockManager, storage), this);
+                new BlockPlacementListener(blockManager, storage, ownerStorage), this);
         getServer().getPluginManager().registerEvents(
-                new BlockBreakListener(blockManager, storage, pedestalStorage), this);
+                new BlockBreakListener(blockManager, storage, pedestalStorage, ownerStorage), this);
         getServer().getPluginManager().registerEvents(
-                new ChunkListener(storage, pedestalStorage), this);
+                new ChunkListener(storage, pedestalStorage, ownerStorage), this);
         getServer().getPluginManager().registerEvents(
-                new PedestalInteractionListener(blockManager, storage, pedestalStorage), this);
+                new PedestalInteractionListener(blockManager, storage, pedestalStorage, ownerStorage), this);
 
         // Register commands
         CustomBlockCommand blockCommand = new CustomBlockCommand(blockManager);
         getCommand("customblock").setExecutor(blockCommand);
         getCommand("customblock").setTabCompleter(blockCommand);
+
+        PedestalCommand pedestalCommand = new PedestalCommand(pedestalStorage, ownerStorage);
+        getCommand("pedestal").setExecutor(pedestalCommand);
+        getCommand("pedestal").setTabCompleter(pedestalCommand);
 
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
@@ -149,5 +156,9 @@ public final class ElementSmpUtility extends JavaPlugin {
 
     public PedestalDataStorage getPedestalStorage() {
         return pedestalStorage;
+    }
+
+    public PedestalOwnerStorage getOwnerStorage() {
+        return ownerStorage;
     }
 }

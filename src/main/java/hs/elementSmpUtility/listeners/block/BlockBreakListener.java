@@ -1,10 +1,11 @@
-package hs.elementSmpUtility.listeners;
+package hs.elementSmpUtility.listeners.block;
 
 import hs.elementSmpUtility.blocks.CustomBlockManager;
 import hs.elementSmpUtility.blocks.CustomBlockType;
 import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import hs.elementSmpUtility.storage.BlockDataStorage;
-import hs.elementSmpUtility.storage.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalDataStorage;
+import hs.elementSmpUtility.storage.pedestal.PedestalOwnerStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.GameMode;
@@ -26,12 +27,14 @@ public class BlockBreakListener implements Listener {
     private final CustomBlockManager blockManager;
     private final BlockDataStorage storage;
     private final PedestalDataStorage pedestalStorage;
+    private final PedestalOwnerStorage ownerStorage;
 
     public BlockBreakListener(CustomBlockManager blockManager, BlockDataStorage storage,
-                              PedestalDataStorage pedestalStorage) {
+                              PedestalDataStorage pedestalStorage, PedestalOwnerStorage ownerStorage) {
         this.blockManager = blockManager;
         this.storage = storage;
         this.pedestalStorage = pedestalStorage;
+        this.ownerStorage = ownerStorage;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -51,9 +54,23 @@ public class BlockBreakListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        Location location = event.getBlock().getLocation();
 
         // Handle pedestal breaking
         if ("pedestal".equals(blockId)) {
+            // Check ownership - only owner can break (unless creative mode with bypass permission)
+            if (!ownerStorage.isOwner(location, player.getUniqueId())) {
+                if (player.getGameMode() != GameMode.CREATIVE || !player.hasPermission("elementsmp.pedestal.bypass")) {
+                    event.setCancelled(true);
+                    String ownerName = ownerStorage.getOwnerName(location);
+                    player.sendActionBar(
+                            Component.text("This pedestal belongs to " + ownerName + "!")
+                                    .color(TextColor.color(0xFF5555))
+                    );
+                    return;
+                }
+            }
+
             handlePedestalBreak(event);
 
             // Check if unbreakable
@@ -127,6 +144,9 @@ public class BlockBreakListener implements Listener {
 
         // Remove from pedestal storage
         pedestalStorage.savePedestalItem(loc, null);
+
+        // Remove owner data
+        ownerStorage.removeOwner(loc);
 
         blockManager.getPlugin().getLogger().info("Pedestal break cleanup complete");
     }
