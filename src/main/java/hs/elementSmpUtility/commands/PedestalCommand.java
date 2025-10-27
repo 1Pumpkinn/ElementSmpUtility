@@ -255,9 +255,11 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // Don't allow transferring to yourself
-        if (newOwnerUUID.equals(player.getUniqueId())) {
-            player.sendMessage(Component.text("You already own this pedestal!")
+        // FIXED: Check if transferring to the CURRENT owner, not the player executing the command
+        if (newOwnerUUID.equals(currentOwner)) {
+            String currentOwnerName = Bukkit.getOfflinePlayer(currentOwner).getName();
+            player.sendMessage(Component.text("This pedestal is already owned by " +
+                            (currentOwnerName != null ? currentOwnerName : currentOwner.toString()) + "!")
                     .color(TextColor.color(0xFF5555)));
             return;
         }
