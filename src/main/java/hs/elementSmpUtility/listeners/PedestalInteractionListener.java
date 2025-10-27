@@ -21,6 +21,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 /**
  * Handles player interactions with pedestal blocks
  */
@@ -64,10 +66,24 @@ public class PedestalInteractionListener implements Listener {
 
         event.setCancelled(true);
         Player player = event.getPlayer();
+        UUID playerUUID = player.getUniqueId();
 
-        // Check ownership - only owner can interact (unless they have bypass permission)
-        if (!ownerStorage.isOwner(block.getLocation(), player.getUniqueId())) {
-            if (!player.hasPermission("elementsmp.pedestal.bypass")) {
+        // Get the owner of this pedestal
+        UUID ownerUUID = ownerStorage.getOwner(block.getLocation());
+
+        // Check if there's an owner for this pedestal
+        if (ownerUUID == null) {
+            // No owner set - this shouldn't happen but allow interaction
+            blockManager.getPlugin().getLogger().warning(
+                    "Pedestal at " + block.getLocation() + " has no owner! This shouldn't happen."
+            );
+        } else {
+            // Check if player is the owner
+            boolean isOwner = ownerUUID.equals(playerUUID);
+            boolean hasBypass = player.hasPermission("elementsmp.pedestal.bypass");
+
+            // If not owner AND doesn't have bypass permission, deny access
+            if (!isOwner && !hasBypass) {
                 String ownerName = ownerStorage.getOwnerName(block.getLocation());
                 player.sendActionBar(
                         Component.text("This pedestal belongs to " + ownerName + "!")
@@ -77,6 +93,7 @@ public class PedestalInteractionListener implements Listener {
             }
         }
 
+        // If we reach here, player is authorized to interact
         ItemStack heldItem = player.getInventory().getItemInMainHand();
 
         // Get current displayed item

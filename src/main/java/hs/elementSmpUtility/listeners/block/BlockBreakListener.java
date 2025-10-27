@@ -19,6 +19,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 /**
  * Handles breaking custom blocks and preventing unbreakable blocks from being broken
  */
@@ -58,9 +60,17 @@ public class BlockBreakListener implements Listener {
 
         // Handle pedestal breaking
         if ("pedestal".equals(blockId)) {
-            // Check ownership - only owner can break (unless creative mode with bypass permission)
-            if (!ownerStorage.isOwner(location, player.getUniqueId())) {
-                if (player.getGameMode() != GameMode.CREATIVE || !player.hasPermission("elementsmp.pedestal.bypass")) {
+            // Get the owner of this pedestal
+            UUID ownerUUID = ownerStorage.getOwner(location);
+            UUID playerUUID = player.getUniqueId();
+
+            // Check ownership
+            if (ownerUUID != null) {
+                boolean isOwner = ownerUUID.equals(playerUUID);
+                boolean hasBypass = player.hasPermission("elementsmp.pedestal.bypass");
+
+                // If not owner AND doesn't have bypass permission, deny breaking
+                if (!isOwner && !hasBypass) {
                     event.setCancelled(true);
                     String ownerName = ownerStorage.getOwnerName(location);
                     player.sendActionBar(
@@ -71,9 +81,7 @@ public class BlockBreakListener implements Listener {
                 }
             }
 
-            handlePedestalBreak(event);
-
-            // Check if unbreakable
+            // Check if unbreakable (after ownership check)
             if (blockType.isUnbreakable() && player.getGameMode() != GameMode.CREATIVE) {
                 event.setCancelled(true);
                 player.sendActionBar(
@@ -83,6 +91,8 @@ public class BlockBreakListener implements Listener {
                 return;
             }
 
+            // If we reach here, breaking is allowed
+            handlePedestalBreak(event);
             storage.removeCustomBlock(event.getBlock());
             return;
         }
