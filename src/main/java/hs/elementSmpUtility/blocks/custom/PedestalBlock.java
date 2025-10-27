@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -112,10 +113,47 @@ public class PedestalBlock {
      * Removes the armor stand display from the pedestal.
      */
     public static void removeDisplay(Location pedestalLocation) {
-        ArmorStand stand = getExistingDisplay(pedestalLocation);
-        if (stand != null) {
-            stand.remove();
+        // Use the same logic as removeAllDisplays for consistency
+        removeAllDisplays(pedestalLocation);
+    }
+
+    /**
+     * Removes the specific armor stand for THIS pedestal only.
+     * More aggressive cleanup that checks the pedestal block coordinates.
+     */
+    public static void removeAllDisplays(Location pedestalLocation) {
+        // Search in the area directly above and around the pedestal block
+        Location searchCenter = pedestalLocation.clone().add(0.5, 0.5, 0.5);
+
+        // Get the pedestal's exact block coordinates
+        int pedestalX = pedestalLocation.getBlockX();
+        int pedestalY = pedestalLocation.getBlockY();
+        int pedestalZ = pedestalLocation.getBlockZ();
+
+        // Search nearby entities - wider radius to catch all possible armor stands
+        for (Entity entity : pedestalLocation.getWorld().getNearbyEntities(searchCenter, 1.0, 1.5, 1.0)) {
+            if (entity instanceof ArmorStand stand) {
+                if (stand.hasMetadata(METADATA_KEY)) {
+                    Location standLoc = stand.getLocation();
+
+                    // Get the block below the armor stand (should be the pedestal)
+                    int standBlockX = standLoc.getBlockX();
+                    int standBlockZ = standLoc.getBlockZ();
+
+                    // Also check if armor stand is directly above the pedestal (Y check)
+                    int standY = (int) Math.floor(standLoc.getY());
+
+                    // Remove if armor stand is within the pedestal's column (same X,Z, Y within range)
+                    boolean sameXZ = (standBlockX == pedestalX && standBlockZ == pedestalZ);
+                    boolean correctHeight = (standY >= pedestalY && standY <= pedestalY + 2);
+
+                    if (sameXZ && correctHeight) {
+                        stand.remove();
+                    }
+                }
+            }
         }
+
         addGlowEffect(pedestalLocation, false);
     }
 

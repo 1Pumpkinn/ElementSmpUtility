@@ -12,17 +12,16 @@ commands:
     aliases: [cb, cblock]
     permission: elementsmp.customblock
 
-  structure:
-    description: Generate structures from NBT files
-    usage: /structure <generate|list|reload> [args]
-    aliases: [struct, gen]
-    permission: elementsmp.structure
+  pedestal:
+    description: Manage pedestal storage
+    usage: /pedestal <info|reload>
+    permission: elementsmp.pedestal.admin
 
 permissions:
   elementsmp.customblock:
     description: Allows use of custom block commands
     default: op
 
-  elementsmp.structure:
-    description: Allows use of structure generation commands
+  elementsmp.pedestal.admin:
+    description: Allows use of pedestal admin commands
     default: op

@@ -1,5 +1,6 @@
 package hs.elementSmpUtility.blocks;
 
+import hs.elementSmpUtility.blocks.custom.PedestalBlock;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
@@ -99,6 +100,7 @@ public class CustomBlockManager {
                 true
         ));
 
+        // Pedestal is now BREAKABLE (false)
         registerBlock(new CustomModelBlock(
                 "pedestal",
                 Material.LODESTONE,
@@ -106,9 +108,8 @@ public class CustomBlockManager {
                         .color(TextColor.color(0xD4AF37))
                         .decoration(TextDecoration.ITALIC, false)
                         .decoration(TextDecoration.BOLD, true),
-                false,
+                false, // Changed from true to false - now breakable!
                 1
-
         ));
     }
 
@@ -142,6 +143,12 @@ public class CustomBlockManager {
                                 .decoration(TextDecoration.ITALIC, false),
                         Component.text("Ancient relic of power")
                                 .color(TextColor.color(0x888888))
+                                .decoration(TextDecoration.ITALIC, true)
+                ));
+            } else if ("pedestal".equals(blockId)) {
+                meta.lore(java.util.List.of(
+                        Component.text("Display your most prized possessions")
+                                .color(TextColor.color(0xD4AF37))
                                 .decoration(TextDecoration.ITALIC, true)
                 ));
             }

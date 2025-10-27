@@ -8,6 +8,9 @@ import hs.elementSmpUtility.storage.PedestalDataStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -89,21 +92,42 @@ public class BlockBreakListener implements Listener {
     }
 
     /**
-     * Handle breaking a pedestal block
+     * Handle breaking a pedestal block - properly cleans up ALL armor stands
      */
     private void handlePedestalBreak(BlockBreakEvent event) {
-        // Get displayed item
-        ItemStack displayedItem = pedestalStorage.getPedestalItem(event.getBlock().getLocation());
+        Location loc = event.getBlock().getLocation();
 
-        // Remove display armor stand
-        PedestalBlock.removeDisplay(event.getBlock().getLocation());
+        // Get displayed item from storage
+        ItemStack displayedItem = pedestalStorage.getPedestalItem(loc);
+
+        // Log for debugging
+        if (displayedItem != null) {
+            blockManager.getPlugin().getLogger().info(
+                    "Breaking pedestal at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() +
+                            " with item: " + displayedItem.getType()
+            );
+        }
+
+        // CRITICAL: Remove ALL nearby armor stands with pedestal metadata
+        PedestalBlock.removeAllDisplays(loc);
+
+        // Verify removal
+        ArmorStand remaining = PedestalBlock.getExistingDisplay(loc);
+        if (remaining != null) {
+            blockManager.getPlugin().getLogger().warning(
+                    "Armor stand still exists after removal attempt! Force removing..."
+            );
+            remaining.remove();
+        }
 
         // Drop displayed item if present
-        if (displayedItem != null) {
-            event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), displayedItem);
+        if (displayedItem != null && displayedItem.getType() != Material.AIR) {
+            event.getBlock().getWorld().dropItemNaturally(loc, displayedItem);
         }
 
         // Remove from pedestal storage
-        pedestalStorage.savePedestalItem(event.getBlock().getLocation(), null);
+        pedestalStorage.savePedestalItem(loc, null);
+
+        blockManager.getPlugin().getLogger().info("Pedestal break cleanup complete");
     }
 }

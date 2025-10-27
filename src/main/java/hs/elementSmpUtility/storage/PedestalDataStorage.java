@@ -18,21 +18,28 @@ import java.util.Map;
 
 /**
  * Manages storage of pedestal item data
+ * Uses DUAL storage: Chunk PDC (primary) + YAML file (backup)
  */
 public class PedestalDataStorage {
 
     private final JavaPlugin plugin;
     private final NamespacedKey pedestalKey;
     private final Map<String, ItemStack> pedestalCache;
+    private final PedestalYmlStorage ymlStorage;
 
     public PedestalDataStorage(JavaPlugin plugin) {
         this.plugin = plugin;
         this.pedestalKey = new NamespacedKey(plugin, "pedestal_items");
         this.pedestalCache = new HashMap<>();
+        this.ymlStorage = new PedestalYmlStorage(plugin);
+
+        // Log storage initialization
+        plugin.getLogger().info("Pedestal storage initialized (PDC + YAML backup)");
+        plugin.getLogger().info("Found " + ymlStorage.getPedestalCount() + " pedestals in YAML backup");
     }
 
     /**
-     * Save item data for a pedestal
+     * Save item data for a pedestal (DUAL SAVE: PDC + YAML)
      */
     public void savePedestalItem(Location location, ItemStack item) {
         String locationKey = getLocationKey(location);
@@ -40,11 +47,25 @@ public class PedestalDataStorage {
         if (item == null || item.getType().isAir()) {
             pedestalCache.remove(locationKey);
             removePedestalFromChunk(location);
+            ymlStorage.removePedestal(location);
             return;
         }
 
+        // Save to cache
         pedestalCache.put(locationKey, item.clone());
 
+        // Save to Chunk PDC
+        saveToChunkPDC(location, item);
+
+        // Save to YAML backup
+        ymlStorage.savePedestal(location, item);
+    }
+
+    /**
+     * Save to Chunk PDC
+     */
+    private void saveToChunkPDC(Location location, ItemStack item) {
+        String locationKey = getLocationKey(location);
         Chunk chunk = location.getChunk();
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
 
@@ -81,17 +102,39 @@ public class PedestalDataStorage {
     }
 
     /**
-     * Get item data for a pedestal
+     * Get item data for a pedestal (tries cache → PDC → YAML)
      */
     public ItemStack getPedestalItem(Location location) {
         String locationKey = getLocationKey(location);
 
-        // Check cache first
+        // Try cache first
         if (pedestalCache.containsKey(locationKey)) {
             return pedestalCache.get(locationKey);
         }
 
-        // Load from chunk data
+        // Try PDC
+        ItemStack fromPDC = loadFromChunkPDC(location);
+        if (fromPDC != null) {
+            pedestalCache.put(locationKey, fromPDC);
+            return fromPDC;
+        }
+
+        // Try YAML backup as last resort
+        ItemStack fromYML = ymlStorage.loadPedestal(location);
+        if (fromYML != null) {
+            pedestalCache.put(locationKey, fromYML);
+            plugin.getLogger().info("Restored pedestal from YAML backup at " +
+                    location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ());
+        }
+
+        return fromYML;
+    }
+
+    /**
+     * Load from Chunk PDC
+     */
+    private ItemStack loadFromChunkPDC(Location location) {
+        String locationKey = getLocationKey(location);
         Chunk chunk = location.getChunk();
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
         String data = pdc.getOrDefault(pedestalKey, PersistentDataType.STRING, "");
@@ -105,11 +148,7 @@ public class PedestalDataStorage {
 
             String[] parts = entry.split(":", 2);
             if (parts.length == 2 && parts[0].equals(locationKey)) {
-                ItemStack item = deserializeItem(parts[1]);
-                if (item != null) {
-                    pedestalCache.put(locationKey, item);
-                }
-                return item;
+                return deserializeItem(parts[1]);
             }
         }
 
@@ -147,7 +186,7 @@ public class PedestalDataStorage {
     }
 
     /**
-     * Load chunk data into cache
+     * Load chunk data into cache (also syncs with YAML)
      */
     public void loadChunk(Chunk chunk) {
         PersistentDataContainer pdc = chunk.getPersistentDataContainer();
@@ -218,5 +257,12 @@ public class PedestalDataStorage {
                 loc.getBlockX() + "," +
                 loc.getBlockY() + "," +
                 loc.getBlockZ();
+    }
+
+    /**
+     * Get YAML storage for direct access
+     */
+    public PedestalYmlStorage getYmlStorage() {
+        return ymlStorage;
     }
 }

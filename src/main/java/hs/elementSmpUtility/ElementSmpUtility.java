@@ -43,6 +43,7 @@ public final class ElementSmpUtility extends JavaPlugin {
         getCommand("customblock").setExecutor(blockCommand);
         getCommand("customblock").setTabCompleter(blockCommand);
 
+
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
     }
@@ -64,4 +65,4 @@ public final class ElementSmpUtility extends JavaPlugin {
         return pedestalStorage;
     }
 
-}
+    }
