@@ -58,15 +58,23 @@ public class BlockBreakListener implements Listener {
         Player player = event.getPlayer();
         Location location = event.getBlock().getLocation();
 
-        // Handle pedestal breaking
+        // Handle pedestal breaking - CHECK OWNERSHIP FIRST
         if ("pedestal".equals(blockId)) {
-            // Get the owner of this pedestal
             UUID ownerUUID = ownerStorage.getOwner(location);
-            UUID playerUUID = player.getUniqueId();
 
-            // Check ownership
-            if (ownerUUID != null) {
-                boolean isOwner = ownerUUID.equals(playerUUID);
+            // If no owner, only admins can break (to claim or fix)
+            if (ownerUUID == null) {
+                if (!player.hasPermission("elementsmp.pedestal.admin")) {
+                    event.setCancelled(true);
+                    player.sendActionBar(
+                            Component.text("This pedestal has no owner! Ask an admin to claim it.")
+                                    .color(TextColor.color(0xFF5555))
+                    );
+                    return;
+                }
+                // Admin can break unclaimed pedestals
+            } else {
+                boolean isOwner = ownerUUID.equals(player.getUniqueId());
                 boolean hasBypass = player.hasPermission("elementsmp.pedestal.bypass");
 
                 // If not owner AND doesn't have bypass permission, deny breaking
@@ -81,23 +89,13 @@ public class BlockBreakListener implements Listener {
                 }
             }
 
-            // Check if unbreakable (after ownership check)
-            if (blockType.isUnbreakable() && player.getGameMode() != GameMode.CREATIVE) {
-                event.setCancelled(true);
-                player.sendActionBar(
-                        Component.text("This pedestal is unbreakable!")
-                                .color(TextColor.color(0xFF5555))
-                );
-                return;
-            }
-
-            // If we reach here, breaking is allowed
+            // Ownership check passed, now handle the break
             handlePedestalBreak(event);
             storage.removeCustomBlock(event.getBlock());
             return;
         }
 
-        // Check if block is unbreakable
+        // Handle other custom blocks - check if unbreakable
         if (blockType.isUnbreakable()) {
             // Allow creative mode players to break
             if (player.getGameMode() == GameMode.CREATIVE) {
@@ -127,15 +125,7 @@ public class BlockBreakListener implements Listener {
         // Get displayed item from storage
         ItemStack displayedItem = pedestalStorage.getPedestalItem(loc);
 
-        // Log for debugging
-        if (displayedItem != null) {
-            blockManager.getPlugin().getLogger().info(
-                    "Breaking pedestal at " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() +
-                            " with item: " + displayedItem.getType()
-            );
-        }
-
-        // CRITICAL: Remove ALL nearby armor stands with pedestal metadata
+        // Remove ALL nearby armor stands
         PedestalBlock.removeAllDisplays(loc);
 
         // Verify removal
@@ -157,7 +147,5 @@ public class BlockBreakListener implements Listener {
 
         // Remove owner data
         ownerStorage.removeOwner(loc);
-
-        blockManager.getPlugin().getLogger().info("Pedestal break cleanup complete");
     }
 }

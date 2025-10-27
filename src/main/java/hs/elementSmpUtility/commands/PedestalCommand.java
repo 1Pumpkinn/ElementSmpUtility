@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,6 +61,10 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
 
             case "check":
                 handleCheck(sender);
+                break;
+
+            case "claim":
+                handleClaim(sender);
                 break;
 
             case "transfer":
@@ -118,8 +121,10 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
         UUID owner = ownerStorage.getOwner(loc);
 
         if (owner == null) {
-            player.sendMessage(Component.text("This block is not a pedestal!")
+            player.sendMessage(Component.text("This pedestal has NO OWNER!")
                     .color(TextColor.color(0xFF5555)));
+            player.sendMessage(Component.text("Use /pedestal claim to claim it")
+                    .color(TextColor.color(0xFFAA00)));
             return;
         }
 
@@ -134,6 +139,50 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
                 .color(TextColor.color(0xAAAAAA)));
         player.sendMessage(Component.text("Online: " + (ownerPlayer.isOnline() ? "Yes" : "No"))
                 .color(TextColor.color(ownerPlayer.isOnline() ? 0x55FF55 : 0xFF5555)));
+
+        // Show if player is the owner
+        if (owner.equals(player.getUniqueId())) {
+            player.sendMessage(Component.text("You OWN this pedestal")
+                    .color(TextColor.color(0x55FF55)));
+        } else {
+            player.sendMessage(Component.text("You do NOT own this pedestal")
+                    .color(TextColor.color(0xFF5555)));
+        }
+    }
+
+    private void handleClaim(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command!")
+                    .color(TextColor.color(0xFF5555)));
+            return;
+        }
+
+        Block targetBlock = player.getTargetBlockExact(5);
+        if (targetBlock == null) {
+            player.sendMessage(Component.text("You must be looking at a pedestal!")
+                    .color(TextColor.color(0xFF5555)));
+            return;
+        }
+
+        Location loc = targetBlock.getLocation();
+        UUID currentOwner = ownerStorage.getOwner(loc);
+
+        // Check if pedestal already has an owner
+        if (currentOwner != null) {
+            String ownerName = ownerStorage.getOwnerName(loc);
+            player.sendMessage(Component.text("This pedestal is already owned by " + ownerName + "!")
+                    .color(TextColor.color(0xFF5555)));
+            player.sendMessage(Component.text("Use /pedestal transfer <player> to change ownership")
+                    .color(TextColor.color(0xFFAA00)));
+            return;
+        }
+
+        // Claim the pedestal
+        ownerStorage.setOwner(loc, player.getUniqueId());
+        player.sendMessage(Component.text("Pedestal claimed successfully!")
+                .color(TextColor.color(0x55FF55)));
+        player.sendMessage(Component.text("You are now the owner of this pedestal")
+                .color(TextColor.color(0xFFFFFF)));
     }
 
     private void handleTransfer(CommandSender sender, String[] args) {
@@ -162,14 +211,21 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
         UUID currentOwner = ownerStorage.getOwner(loc);
 
         if (currentOwner == null) {
-            player.sendMessage(Component.text("This block is not a pedestal!")
+            player.sendMessage(Component.text("This pedestal has no owner!")
                     .color(TextColor.color(0xFF5555)));
+            player.sendMessage(Component.text("Use /pedestal claim to claim it first")
+                    .color(TextColor.color(0xFFAA00)));
             return;
         }
 
-        // Check if player is owner or has bypass permission
-        if (!currentOwner.equals(player.getUniqueId()) && !player.hasPermission("elementsmp.pedestal.bypass")) {
-            player.sendMessage(Component.text("You don't own this pedestal!")
+        // CRITICAL: Check permissions properly
+        // Only allow transfer if player is owner OR has admin permission
+        // The bypass permission should NOT allow transfers
+        boolean isOwner = currentOwner.equals(player.getUniqueId());
+        boolean hasAdmin = player.hasPermission("elementsmp.pedestal.admin");
+
+        if (!isOwner && !hasAdmin) {
+            player.sendMessage(Component.text("You don't own this pedestal and don't have admin permission!")
                     .color(TextColor.color(0xFF5555)));
             return;
         }
@@ -199,7 +255,14 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // If we got here with a UUID, set the new owner
+        // Don't allow transferring to yourself
+        if (newOwnerUUID.equals(player.getUniqueId())) {
+            player.sendMessage(Component.text("You already own this pedestal!")
+                    .color(TextColor.color(0xFF5555)));
+            return;
+        }
+
+        // Set the new owner
         ownerStorage.setOwner(loc, newOwnerUUID);
 
         // Get the actual name for display
@@ -224,6 +287,8 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
                 .color(TextColor.color(0xFFFFFF)));
         sender.sendMessage(Component.text("/pedestal check - Check pedestal owner")
                 .color(TextColor.color(0xFFFFFF)));
+        sender.sendMessage(Component.text("/pedestal claim - Claim an unclaimed pedestal")
+                .color(TextColor.color(0xFFFFFF)));
         sender.sendMessage(Component.text("/pedestal transfer <player|uuid> - Transfer ownership")
                 .color(TextColor.color(0xFFFFFF)));
         sender.sendMessage(Component.text("  Example: /pedestal transfer Notch")
@@ -241,6 +306,7 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
             completions.add("info");
             completions.add("reload");
             completions.add("check");
+            completions.add("claim");
             completions.add("transfer");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("transfer")) {
             // Add online player names

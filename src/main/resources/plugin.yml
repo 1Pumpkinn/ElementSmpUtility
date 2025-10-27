@@ -27,5 +27,8 @@ permissions:
     default: op
 
   elementsmp.pedestal.bypass:
-    description: Allows bypassing pedestal ownership restrictions
-    default: op
+    description: Allows bypassing pedestal ownership restrictions (DANGEROUS - grants access to ALL pedestals)
+    default: false
+    # Changed from 'default: op' to 'default: false'
+    # This permission should only be granted explicitly when needed
+    # OPs will NOT have this by default anymore

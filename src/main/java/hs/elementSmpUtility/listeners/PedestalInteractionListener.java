@@ -58,7 +58,7 @@ public class PedestalInteractionListener implements Listener {
             return;
         }
 
-        // Check if it's a pedestal block (using cached check for performance)
+        // Check if it's a pedestal block
         String blockId = blockStorage.getCustomBlockIdCached(block.getLocation());
         if (blockId == null || !"pedestal".equals(blockId)) {
             return;
@@ -66,37 +66,37 @@ public class PedestalInteractionListener implements Listener {
 
         event.setCancelled(true);
         Player player = event.getPlayer();
-        UUID playerUUID = player.getUniqueId();
 
         // Get the owner of this pedestal
         UUID ownerUUID = ownerStorage.getOwner(block.getLocation());
 
-        // Check if there's an owner for this pedestal
+        // Check ownership - this is CRITICAL for security
         if (ownerUUID == null) {
-            // No owner set - this shouldn't happen but allow interaction
-            blockManager.getPlugin().getLogger().warning(
-                    "Pedestal at " + block.getLocation() + " has no owner! This shouldn't happen."
+            player.sendActionBar(
+                    Component.text("Error: This pedestal has no owner!")
+                            .color(TextColor.color(0xFF5555))
             );
-        } else {
-            // Check if player is the owner
-            boolean isOwner = ownerUUID.equals(playerUUID);
-            boolean hasBypass = player.hasPermission("elementsmp.pedestal.bypass");
-
-            // If not owner AND doesn't have bypass permission, deny access
-            if (!isOwner && !hasBypass) {
-                String ownerName = ownerStorage.getOwnerName(block.getLocation());
-                player.sendActionBar(
-                        Component.text("This pedestal belongs to " + ownerName + "!")
-                                .color(TextColor.color(0xFF5555))
-                );
-                return;
-            }
+            blockManager.getPlugin().getLogger().warning(
+                    "Pedestal at " + block.getLocation() + " has no owner!"
+            );
+            return;
         }
 
-        // If we reach here, player is authorized to interact
-        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        boolean isOwner = ownerUUID.equals(player.getUniqueId());
+        boolean hasBypass = player.hasPermission("elementsmp.pedestal.bypass");
 
-        // Get current displayed item
+        // If not owner AND doesn't have bypass permission, deny access
+        if (!isOwner && !hasBypass) {
+            String ownerName = ownerStorage.getOwnerName(block.getLocation());
+            player.sendActionBar(
+                    Component.text("This pedestal belongs to " + ownerName + "!")
+                            .color(TextColor.color(0xFF5555))
+            );
+            return;
+        }
+
+        // Player is authorized - handle interaction
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
         ItemStack currentItem = pedestalStorage.getPedestalItem(block.getLocation());
 
         // Auto-restore display if missing (failsafe)
