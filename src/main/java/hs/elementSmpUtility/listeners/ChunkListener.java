@@ -57,6 +57,7 @@ public class ChunkListener implements Listener {
 
     /**
      * Restore all pedestal displays in a chunk based on stored data
+     * CRITICAL: Also removes any orphaned armor stands at pedestal locations
      */
     private void restorePedestalDisplays(Chunk chunk) {
         Plugin plugin = Bukkit.getPluginManager().getPlugin("ElementSmpUtility");
@@ -76,27 +77,26 @@ public class ChunkListener implements Listener {
                         // Check if it's registered as a pedestal
                         String blockId = storage.getCustomBlockIdCached(loc);
                         if ("pedestal".equals(blockId)) {
-                            // Get stored item
+                            // FIRST: Remove any existing armor stands (cleanup orphans from restart)
+                            PedestalBlock.removeAllDisplays(loc);
+
+                            // THEN: Get stored item and recreate display if needed
                             ItemStack storedItem = pedestalStorage.getPedestalItem(loc);
 
                             if (storedItem != null && storedItem.getType() != Material.AIR) {
-                                // Check if display already exists
-                                if (PedestalBlock.getExistingDisplay(loc) == null) {
-                                    // Restore the display
-                                    PedestalBlock.createOrUpdateDisplay(loc, storedItem);
-                                    restored++;
+                                // Restore the display
+                                PedestalBlock.createOrUpdateDisplay(loc, storedItem);
+                                restored++;
 
-                                    if (plugin != null) {
-                                        plugin.getLogger().info(
-                                                "Restored pedestal display at " +
-                                                        loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() +
-                                                        " with " + storedItem.getType()
-                                        );
-                                    }
+                                if (plugin != null) {
+                                    plugin.getLogger().info(
+                                            "Restored pedestal display at " +
+                                                    loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() +
+                                                    " with " + storedItem.getType()
+                                    );
                                 }
                             } else {
-                                // No item stored, ensure no orphaned displays exist
-                                PedestalBlock.removeAllDisplays(loc);
+                                // No item stored, cleanup was already done above
                                 cleaned++;
                             }
                         }

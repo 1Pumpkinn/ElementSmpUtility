@@ -83,7 +83,7 @@ public class PedestalBlock {
         stand.setSmall(true);
         stand.setMarker(true);
         stand.setCustomNameVisible(false);
-        stand.setPersistent(true);
+        stand.setPersistent(false); // CHANGED: Don't persist across restarts - we'll recreate from data
         stand.setCanPickupItems(false);
         stand.setCollidable(false);
 
@@ -118,8 +118,8 @@ public class PedestalBlock {
     }
 
     /**
-     * Removes the specific armor stand for THIS pedestal only.
-     * More aggressive cleanup that checks the pedestal block coordinates.
+     * Removes ALL armor stands near the pedestal location.
+     * This is aggressive cleanup that works even when metadata is lost (e.g., after server restart).
      */
     public static void removeAllDisplays(Location pedestalLocation) {
         // Search in the area directly above and around the pedestal block
@@ -133,14 +133,18 @@ public class PedestalBlock {
         // Search nearby entities - wider radius to catch all possible armor stands
         for (Entity entity : pedestalLocation.getWorld().getNearbyEntities(searchCenter, 1.0, 1.5, 1.0)) {
             if (entity instanceof ArmorStand stand) {
+                // Remove if it has our metadata
                 if (stand.hasMetadata(METADATA_KEY)) {
-                    Location standLoc = stand.getLocation();
+                    stand.remove();
+                    continue;
+                }
 
-                    // Get the block below the armor stand (should be the pedestal)
+                // Also remove if it's an invisible, small, marker armor stand in the pedestal column
+                // This catches armor stands that lost metadata (e.g., after restart)
+                if (!stand.isVisible() && stand.isSmall() && stand.isMarker()) {
+                    Location standLoc = stand.getLocation();
                     int standBlockX = standLoc.getBlockX();
                     int standBlockZ = standLoc.getBlockZ();
-
-                    // Also check if armor stand is directly above the pedestal (Y check)
                     int standY = (int) Math.floor(standLoc.getY());
 
                     // Remove if armor stand is within the pedestal's column (same X,Z, Y within range)
