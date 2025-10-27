@@ -8,6 +8,8 @@ import hs.elementSmpUtility.listeners.ChunkListener;
 import hs.elementSmpUtility.listeners.PedestalInteractionListener;
 import hs.elementSmpUtility.storage.BlockDataStorage;
 import hs.elementSmpUtility.storage.PedestalDataStorage;
+import hs.elementSmpUtility.structure.components.StructureCommand;
+import hs.elementSmpUtility.structure.components.StructureManagerImpl;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ElementSmpUtility extends JavaPlugin {
@@ -15,6 +17,7 @@ public final class ElementSmpUtility extends JavaPlugin {
     private CustomBlockManager blockManager;
     private BlockDataStorage storage;
     private PedestalDataStorage pedestalStorage;
+    private StructureManagerImpl structureManager;
 
     @Override
     public void onEnable() {
@@ -22,6 +25,7 @@ public final class ElementSmpUtility extends JavaPlugin {
         blockManager = new CustomBlockManager(this);
         storage = new BlockDataStorage(this, blockManager);
         pedestalStorage = new PedestalDataStorage(this);
+        structureManager = new StructureManagerImpl(this);
 
         // Register listeners
         getServer().getPluginManager().registerEvents(
@@ -38,10 +42,15 @@ public final class ElementSmpUtility extends JavaPlugin {
         getCommand("customblock").setExecutor(blockCommand);
         getCommand("customblock").setTabCompleter(blockCommand);
 
+        StructureCommand structureCommand = new StructureCommand(structureManager);
+        getCommand("structure").setExecutor(structureCommand);
+        getCommand("structure").setTabCompleter(structureCommand);
+
         getLogger().info("ElementSmpUtility has been enabled!");
         getLogger().info("Registered " + blockManager.getAllBlockTypes().size() + " custom blocks");
         getLogger().info("Temple system initialized");
         getLogger().info("Pedestal system initialized (static display)");
+        getLogger().info("Structure generation system initialized");
     }
 
     @Override
@@ -59,5 +68,9 @@ public final class ElementSmpUtility extends JavaPlugin {
 
     public PedestalDataStorage getPedestalStorage() {
         return pedestalStorage;
+    }
+
+    public StructureManagerImpl getStructureManager() {
+        return structureManager;
     }
 }
