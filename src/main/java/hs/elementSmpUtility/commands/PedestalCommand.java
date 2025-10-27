@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -123,10 +124,16 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
         }
 
         String ownerName = ownerStorage.getOwnerName(loc);
-        player.sendMessage(Component.text("Pedestal Owner: " + ownerName)
+        OfflinePlayer ownerPlayer = Bukkit.getOfflinePlayer(owner);
+
+        player.sendMessage(Component.text("=== Pedestal Ownership ===")
                 .color(TextColor.color(0x55FFFF)));
+        player.sendMessage(Component.text("Owner: " + ownerName)
+                .color(TextColor.color(0xFFFFFF)));
         player.sendMessage(Component.text("UUID: " + owner.toString())
                 .color(TextColor.color(0xAAAAAA)));
+        player.sendMessage(Component.text("Online: " + (ownerPlayer.isOnline() ? "Yes" : "No"))
+                .color(TextColor.color(ownerPlayer.isOnline() ? 0x55FF55 : 0xFF5555)));
     }
 
     private void handleTransfer(CommandSender sender, String[] args) {
@@ -137,8 +144,10 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /pedestal transfer <player>")
+            player.sendMessage(Component.text("Usage: /pedestal transfer <player|uuid>")
                     .color(TextColor.color(0xFF5555)));
+            player.sendMessage(Component.text("You can use a player name or UUID")
+                    .color(TextColor.color(0xAAAAAA)));
             return;
         }
 
@@ -165,16 +174,45 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        OfflinePlayer newOwner = Bukkit.getOfflinePlayer(args[1]);
-        if (!newOwner.hasPlayedBefore() && !newOwner.isOnline()) {
-            player.sendMessage(Component.text("Player not found!")
-                    .color(TextColor.color(0xFF5555)));
-            return;
+        // Try to parse as UUID first, then as player name
+        UUID newOwnerUUID = null;
+        String newOwnerName = args[1];
+
+        // Try parsing as UUID
+        try {
+            newOwnerUUID = UUID.fromString(args[1]);
+        } catch (IllegalArgumentException e) {
+            // Not a UUID, try as player name
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
+
+            // Check if the player has ever played (or is online)
+            if (offlinePlayer.hasPlayedBefore() || offlinePlayer.isOnline()) {
+                newOwnerUUID = offlinePlayer.getUniqueId();
+                newOwnerName = offlinePlayer.getName();
+            } else {
+                player.sendMessage(Component.text("Player '" + args[1] + "' not found!")
+                        .color(TextColor.color(0xFF5555)));
+                player.sendMessage(Component.text("Use a valid player name or UUID")
+                        .color(TextColor.color(0xAAAAAA)));
+                return;
+            }
         }
 
-        ownerStorage.setOwner(loc, newOwner.getUniqueId());
-        player.sendMessage(Component.text("Pedestal transferred to " + newOwner.getName())
+        // If we got here with a UUID, set the new owner
+        ownerStorage.setOwner(loc, newOwnerUUID);
+
+        // Get the actual name for display
+        OfflinePlayer newOwnerPlayer = Bukkit.getOfflinePlayer(newOwnerUUID);
+        String displayName = newOwnerPlayer.getName() != null ? newOwnerPlayer.getName() : newOwnerUUID.toString();
+
+        player.sendMessage(Component.text("Pedestal transferred to " + displayName)
                 .color(TextColor.color(0x55FF55)));
+
+        if (!newOwnerPlayer.isOnline()) {
+            player.sendMessage(Component.text("Note: Player is currently offline")
+                    .color(TextColor.color(0xFFAA00)));
+        }
     }
 
     private void sendUsage(CommandSender sender) {
@@ -186,8 +224,12 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
                 .color(TextColor.color(0xFFFFFF)));
         sender.sendMessage(Component.text("/pedestal check - Check pedestal owner")
                 .color(TextColor.color(0xFFFFFF)));
-        sender.sendMessage(Component.text("/pedestal transfer <player> - Transfer ownership")
+        sender.sendMessage(Component.text("/pedestal transfer <player|uuid> - Transfer ownership")
                 .color(TextColor.color(0xFFFFFF)));
+        sender.sendMessage(Component.text("  Example: /pedestal transfer Notch")
+                .color(TextColor.color(0xAAAAAA)));
+        sender.sendMessage(Component.text("  Example: /pedestal transfer 069a79f4-44e9-4726-a5be-fca90e38aaf5")
+                .color(TextColor.color(0xAAAAAA)));
     }
 
     @Override
@@ -203,6 +245,10 @@ public class PedestalCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 2 && args[0].equalsIgnoreCase("transfer")) {
             // Add online player names
             Bukkit.getOnlinePlayers().forEach(p -> completions.add(p.getName()));
+
+            // Add some helpful suggestions
+            completions.add("<player_name>");
+            completions.add("<uuid>");
         }
 
         return completions;
